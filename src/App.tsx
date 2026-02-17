@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import LevelPage from "./pages/LevelPage";
 import Snapshot from "./pages/Snapshot";
+import FinancialCalendar from "./pages/FinancialCalendar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/level/:id" element={<LevelPage />} />
             <Route path="/snapshot" element={<Snapshot />} />
+            <Route path="/calendar" element={<FinancialCalendar />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

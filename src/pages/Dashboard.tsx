@@ -135,17 +135,29 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Financial snapshot CTA */}
+        {/* CTAs */}
         {completedCount >= 2 && (
-          <motion.button
-            className="w-full mt-8 btn-playful bg-secondary text-secondary-foreground py-4 text-base"
-            onClick={() => navigate("/snapshot")}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            whileHover={{ scale: 1.02 }}
-          >
-            📊 View Your Financial Snapshot
-          </motion.button>
+          <div className="mt-8 space-y-3">
+            <motion.button
+              className="w-full btn-playful bg-secondary text-secondary-foreground py-4 text-base"
+              onClick={() => navigate("/snapshot")}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              whileHover={{ scale: 1.02 }}
+            >
+              📊 View Your Financial Snapshot
+            </motion.button>
+            <motion.button
+              className="w-full btn-playful bg-accent text-accent-foreground py-4 text-base"
+              onClick={() => navigate("/calendar")}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              whileHover={{ scale: 1.02 }}
+            >
+              📅 Your Action Plan
+            </motion.button>
+          </div>
         )}
       </main>
     </div>
