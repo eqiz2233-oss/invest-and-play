@@ -2,87 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 40 33% 97%;
+    --foreground: 220 20% 18%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 20% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 20% 18%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 145 63% 42%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 40 90% 56%;
+    --secondary-foreground: 30 60% 16%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 40 20% 92%;
+    --muted-foreground: 220 10% 46%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 80% 56%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 56%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 40 18% 88%;
+    --input: 40 18% 88%;
+    --ring: 145 63% 42%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
+
+    /* Custom tokens */
+    --success: 145 63% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 40 90% 56%;
+    --warning-foreground: 30 60% 16%;
+    --info: 210 80% 56%;
+    --info-foreground: 0 0% 100%;
+    --xp: 270 60% 58%;
+    --xp-foreground: 0 0% 100%;
+    --level-locked: 220 10% 76%;
+    --level-active: 145 63% 42%;
+    --level-complete: 210 80% 56%;
+    --shadow-playful: 0 6px 0 0 hsl(145 63% 32%);
+    --shadow-card: 0 4px 16px -2px hsl(220 20% 18% / 0.08);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    --background: 220 20% 10%;
+    --foreground: 40 20% 95%;
+    --card: 220 20% 14%;
+    --card-foreground: 40 20% 95%;
+    --popover: 220 20% 14%;
+    --popover-foreground: 40 20% 95%;
+    --primary: 145 63% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 80% 50%;
+    --secondary-foreground: 30 60% 10%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 220 10% 60%;
+    --accent: 210 80% 56%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 145 63% 48%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +98,81 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-nunito;
+  }
+}
+
+@layer components {
+  .btn-playful {
+    @apply relative font-bold rounded-2xl transition-all duration-150 active:translate-y-1;
+    box-shadow: var(--shadow-playful);
+  }
+
+  .btn-playful:active {
+    box-shadow: 0 2px 0 0 hsl(145 63% 32%);
+  }
+
+  .card-game {
+    @apply bg-card rounded-2xl border-2 border-border p-6;
+    box-shadow: var(--shadow-card);
+  }
+
+  .progress-track {
+    @apply h-4 rounded-full bg-muted overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full rounded-full bg-primary transition-all duration-500 ease-out;
+  }
+
+  .level-node {
+    @apply w-16 h-16 rounded-full flex items-center justify-center text-xl font-black transition-all duration-200;
+  }
+
+  .level-node-locked {
+    @apply bg-muted text-muted-foreground border-4 border-border;
+  }
+
+  .level-node-active {
+    @apply bg-primary text-primary-foreground border-4 border-primary cursor-pointer;
+    box-shadow: 0 4px 0 0 hsl(145 63% 32%), 0 6px 20px -4px hsl(145 63% 42% / 0.4);
+  }
+
+  .level-node-active:hover {
+    transform: scale(1.1);
+  }
+
+  .level-node-complete {
+    @apply bg-accent text-accent-foreground border-4 border-accent cursor-pointer;
+    box-shadow: 0 4px 0 0 hsl(210 80% 42%);
+  }
+
+  .option-card {
+    @apply card-game cursor-pointer border-2 border-border hover:border-primary transition-all duration-200 p-4;
+  }
+
+  .option-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px -4px hsl(145 63% 42% / 0.2);
+  }
+
+  .option-card-selected {
+    @apply border-primary bg-primary/5;
+  }
+
+  .option-card-correct {
+    @apply border-primary bg-primary/10;
+  }
+
+  .option-card-incorrect {
+    @apply border-destructive bg-destructive/10;
+  }
+
+  .xp-badge {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[hsl(var(--xp))] text-[hsl(var(--xp-foreground))] text-sm font-bold;
+  }
+
+  .streak-badge {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm font-bold;
   }
 }
