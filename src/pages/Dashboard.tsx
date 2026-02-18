@@ -8,7 +8,7 @@ import LanguageToggle from "@/components/LanguageToggle";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { xp, streak, levels: levelProgress, startLevel } = useGame();
+  const { xp, streak, levels: levelProgress, startLevel, resetAll } = useGame();
   const { t } = useLanguage();
   const completedCount = levelProgress.filter((l) => l.status === "complete").length;
   const totalQuestions = levels.reduce((acc, l) => acc + l.questions.length, 0);
@@ -172,6 +172,20 @@ const Dashboard = () => {
             </motion.button>
           </div>
         )}
+
+        {/* Reset progress button */}
+        <div className="mt-12 text-center">
+          <button
+            className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+            onClick={() => {
+              if (window.confirm(t("dash.resetConfirm"))) {
+                resetAll();
+              }
+            }}
+          >
+            {t("dash.resetProgress")}
+          </button>
+        </div>
       </main>
     </div>
   );

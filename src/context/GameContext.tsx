@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { PlanType } from "@/data/planFlows";
 
 export interface Answer {
@@ -26,6 +26,10 @@ export interface FinancialSnapshot {
   inflationAdjusted: number;
   riskTolerance: string;
   safeSpendingRange: [number, number];
+  retirementNeeded: number;
+  retirementMonthlyExpense: number;
+  yearsInRetirement: number;
+  existingSavings: number;
 }
 
 interface GameState {
@@ -35,7 +39,6 @@ interface GameState {
   currentLevel: number | null;
   currentQuestion: number;
   financialSnapshot: FinancialSnapshot | null;
-  // Plan flow state
   selectedPlan: PlanType | null;
   planAnswers: Answer[];
   planQuestionIndex: number;
@@ -43,12 +46,14 @@ interface GameState {
   submitPlanAnswer: (answer: Answer) => void;
   advancePlanQuestion: () => void;
   resetPlan: () => void;
-  // Legacy
+  resetAll: () => void;
   completeQuestion: (answer: Answer) => void;
   completeLevel: (levelId: number) => void;
   startLevel: (levelId: number) => void;
   calculateSnapshot: () => void;
 }
+
+const STORAGE_KEY = "fingame-state";
 
 const defaultLevels: LevelProgress[] = [
   { levelId: 1, status: "active", answers: [], xpEarned: 0 },
@@ -57,6 +62,28 @@ const defaultLevels: LevelProgress[] = [
   { levelId: 4, status: "locked", answers: [], xpEarned: 0 },
   { levelId: 5, status: "locked", answers: [], xpEarned: 0 },
 ];
+
+const getSaved = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch { return null; }
+};
+
+const calculateStreak = (): number => {
+  try {
+    const state = getSaved();
+    if (!state?.lastActiveDate) return 1;
+    const last = new Date(state.lastActiveDate);
+    const today = new Date();
+    last.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return state.streak ?? 1;
+    if (diffDays === 1) return (state.streak ?? 1) + 1;
+    return 1;
+  } catch { return 1; }
+};
 
 const GameContext = createContext<GameState | undefined>(undefined);
 
@@ -67,17 +94,40 @@ export const useGame = () => {
 };
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-  const [xp, setXp] = useState(0);
-  const [streak] = useState(1);
-  const [levels, setLevels] = useState<LevelProgress[]>(defaultLevels);
-  const [currentLevel, setCurrentLevel] = useState<number | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [financialSnapshot, setFinancialSnapshot] = useState<FinancialSnapshot | null>(null);
+  const saved = getSaved();
 
-  // Plan flow state
-  const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
-  const [planAnswers, setPlanAnswers] = useState<Answer[]>([]);
-  const [planQuestionIndex, setPlanQuestionIndex] = useState(0);
+  const [xp, setXp] = useState(() => saved?.xp ?? 0);
+  const [streak, setStreak] = useState(() => calculateStreak());
+  const [levels, setLevels] = useState<LevelProgress[]>(() => saved?.levels ?? defaultLevels);
+  const [currentLevel, setCurrentLevel] = useState<number | null>(() => saved?.currentLevel ?? null);
+  const [currentQuestion, setCurrentQuestion] = useState(() => saved?.currentQuestion ?? 0);
+  const [financialSnapshot, setFinancialSnapshot] = useState<FinancialSnapshot | null>(() => saved?.financialSnapshot ?? null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(() => saved?.selectedPlan ?? null);
+  const [planAnswers, setPlanAnswers] = useState<Answer[]>(() => saved?.planAnswers ?? []);
+  const [planQuestionIndex, setPlanQuestionIndex] = useState(() => saved?.planQuestionIndex ?? 0);
+
+  // Save to localStorage on every state change
+  useEffect(() => {
+    const state = {
+      xp, streak, levels, currentLevel, currentQuestion,
+      financialSnapshot, selectedPlan, planAnswers, planQuestionIndex,
+      lastActiveDate: new Date().toISOString(),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [xp, streak, levels, currentLevel, currentQuestion, financialSnapshot, selectedPlan, planAnswers, planQuestionIndex]);
+
+  const resetAll = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setXp(0);
+    setStreak(1);
+    setLevels(defaultLevels);
+    setCurrentLevel(null);
+    setCurrentQuestion(0);
+    setFinancialSnapshot(null);
+    setSelectedPlan(null);
+    setPlanAnswers([]);
+    setPlanQuestionIndex(0);
+  };
 
   const selectPlan = (plan: PlanType) => {
     setSelectedPlan(plan);
@@ -131,10 +181,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const calculateSnapshot = () => {
-    // Use plan answers if available, otherwise fall back to level answers
     const allAnswers = planAnswers.length > 0
       ? planAnswers
       : levels.flatMap((l) => l.answers);
+
     const getVal = (id: string) => {
       const a = allAnswers.find((a) => a.questionId === id);
       return a ? Number(a.value) : 0;
@@ -144,22 +194,54 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       return a ? String(a.value) : "";
     };
 
-    const monthlyIncome = getVal("monthly_income") || 5000;
-    const monthlyExpenses = getVal("monthly_expenses") || 3000;
-    const monthlySavings = monthlyIncome - monthlyExpenses;
+    const monthlyIncome = getVal("monthly_income") || 30000;
+    const rawExpenses = getVal("monthly_expenses") || 20000;
+    // Guard: expenses cannot exceed income
+    const monthlyExpenses = Math.min(rawExpenses, monthlyIncome);
+    const monthlySavings = Math.max(0, monthlyIncome - monthlyExpenses);
     const annualSavings = monthlySavings * 12;
     const savingsRate = monthlyIncome > 0 ? (monthlySavings / monthlyIncome) * 100 : 0;
     const currentAge = getVal("current_age") || 30;
-    const retirementAge = getVal("retirement_age") || 65;
+    const rawRetirementAge = getVal("retirement_age") || 60;
+    // Guard: retirement age must exceed current age
+    const retirementAge = Math.max(currentAge + 1, rawRetirementAge);
+    const expectedLifespan = getVal("expected_lifespan") || 80;
     const yearsToRetire = retirementAge - currentAge;
+    const yearsInRetirement = Math.max(1, expectedLifespan - retirementAge);
+
     const inflationRate = 0.03;
     const returnRate = 0.07;
     const realReturn = returnRate - inflationRate;
-    const retirementFund = annualSavings * ((Math.pow(1 + realReturn, yearsToRetire) - 1) / realReturn);
+
+    const isRetirementPlan = selectedPlan === "retirement";
+
+    const retirementMonthlyExpense = isRetirementPlan
+      ? (getVal("retirement_monthly_expense") || monthlyExpenses)
+      : monthlyExpenses;
+
+    const existingSavings = isRetirementPlan
+      ? (getVal("retirement_savings_manual") || getVal("retirement_savings") || 0)
+      : (getVal("current_savings_manual") || getVal("current_savings") || 0);
+
+    // Future value of existing savings
+    const fvExisting = existingSavings * Math.pow(1 + returnRate, yearsToRetire);
+
+    // Future value of annual contributions
+    const fvContributions = yearsToRetire > 0 && realReturn !== 0
+      ? annualSavings * ((Math.pow(1 + realReturn, yearsToRetire) - 1) / realReturn)
+      : annualSavings * yearsToRetire;
+
+    const retirementFund = fvExisting + fvContributions;
     const inflationAdjusted = retirementFund / Math.pow(1 + inflationRate, yearsToRetire);
-    const riskTolerance = getStr("risk_tolerance") || "moderate";
+
+    const retirementNeeded = retirementMonthlyExpense * 12 * yearsInRetirement;
+
+    const riskTolerance = getStr("risk_tolerance") || getStr("investment_experience") || "moderate";
     const safeWithdrawal = inflationAdjusted * 0.04;
-    const safeSpendingRange: [number, number] = [safeWithdrawal * 0.8 / 12, safeWithdrawal * 1.2 / 12];
+    const safeSpendingRange: [number, number] = [
+      Math.round(safeWithdrawal * 0.8 / 12),
+      Math.round(safeWithdrawal * 1.2 / 12),
+    ];
 
     setFinancialSnapshot({
       monthlyIncome,
@@ -172,7 +254,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       retirementFund: Math.round(retirementFund),
       inflationAdjusted: Math.round(inflationAdjusted),
       riskTolerance,
-      safeSpendingRange: [Math.round(safeSpendingRange[0]), Math.round(safeSpendingRange[1])],
+      safeSpendingRange,
+      retirementNeeded: Math.round(retirementNeeded),
+      retirementMonthlyExpense,
+      yearsInRetirement,
+      existingSavings,
     });
   };
 
@@ -181,7 +267,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       value={{
         xp, streak, levels, currentLevel, currentQuestion,
         financialSnapshot, completeQuestion, completeLevel,
-        startLevel, calculateSnapshot,
+        startLevel, calculateSnapshot, resetAll,
         selectedPlan, planAnswers, planQuestionIndex,
         selectPlan, submitPlanAnswer, advancePlanQuestion, resetPlan,
       }}

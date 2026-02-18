@@ -42,6 +42,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "dash.viewSnapshot": "📊 View Your Financial Snapshot",
     "dash.actionPlan": "📅 Your Action Plan",
     "dash.complete": "Complete",
+    "dash.resetProgress": "Reset all progress",
+    "dash.resetConfirm": "Reset all progress? This cannot be undone.",
 
     // Level page
     "level.check": "Check",
@@ -75,12 +77,15 @@ const translations: Record<Lang, Record<string, string>> = {
     "snap.atAge": "At age",
     "snap.years": "years",
     "snap.inflationAdj": "Inflation-Adjusted Value",
-    "snap.todayDollars": "In today's dollars",
+    "snap.todayDollars": "In today's baht",
     "snap.safeSpending": "Safe Monthly Spending in Retirement",
     "snap.riskProfile": "Risk profile",
     "snap.keepPlaying": "Keep playing to refine your plan!",
     "snap.keepPlayingSub": "Complete more levels to get a more accurate snapshot.",
     "snap.backToLevels": "Back to Levels",
+    "snap.retirementTarget": "Retirement Target",
+    "snap.goalReached": "of goal reached",
+    "snap.yearsRetirement": "years of retirement",
 
     // Calendar
     "cal.actionPlan": "Action Plan",
@@ -201,6 +206,20 @@ const translations: Record<Lang, Record<string, string>> = {
     "q.retirement_savings.o5": "✏️ Enter manually",
     "q.retirement_savings_manual": "Enter your retirement savings",
 
+    // New differentiated flow questions
+    "q.saving_timeline": "How soon do you want to reach your savings goal?",
+    "q.saving_timeline.o1": "3 months ⚡",
+    "q.saving_timeline.o2": "6 months 📅",
+    "q.saving_timeline.o3": "1 year 🎯",
+    "q.saving_timeline.o4": "3+ years 🌳",
+    "q.goal_priority": "When it comes to hitting your goal, what matters most?",
+    "q.goal_priority.o1": "⚡ Speed — reach it ASAP",
+    "q.goal_priority.o2": "⚖️ Balance — save and live well",
+    "q.goal_priority.o3": "🌊 Flexible — life happens",
+
+    // Validation
+    "plan.enterValue": "Please enter a value to continue",
+
     // Legacy questions
     "q.money_feeling": "How do you feel about money right now?",
     "q.money_feeling.help": "No wrong answers — just be honest!",
@@ -285,6 +304,8 @@ const translations: Record<Lang, Record<string, string>> = {
     "dash.viewSnapshot": "📊 ดูสรุปการเงินของคุณ",
     "dash.actionPlan": "📅 แผนปฏิบัติการ",
     "dash.complete": "สำเร็จ",
+    "dash.resetProgress": "รีเซ็ตความก้าวหน้าทั้งหมด",
+    "dash.resetConfirm": "รีเซ็ตทั้งหมด? ไม่สามารถย้อนกลับได้",
 
     // Level page
     "level.check": "เช็ค",
@@ -324,6 +345,9 @@ const translations: Record<Lang, Record<string, string>> = {
     "snap.keepPlaying": "เล่นต่อเพื่อปรับแผนให้แม่นขึ้น!",
     "snap.keepPlayingSub": "ผ่านด่านเพิ่มจะได้ภาพรวมที่ชัดเจนขึ้น",
     "snap.backToLevels": "กลับไปด่าน",
+    "snap.retirementTarget": "เป้าหมายเกษียณ",
+    "snap.goalReached": "ของเป้าหมาย",
+    "snap.yearsRetirement": "ปีของการเกษียณ",
 
     // Calendar
     "cal.actionPlan": "แผนปฏิบัติการ",
@@ -443,6 +467,20 @@ const translations: Record<Lang, Record<string, string>> = {
     "q.retirement_savings.o4": "1,000,000+ 🏔️",
     "q.retirement_savings.o5": "✏️ ใส่ตัวเลขเอง",
     "q.retirement_savings_manual": "ใส่จำนวนเงินออมเพื่อเกษียณ",
+
+    // New differentiated flow questions
+    "q.saving_timeline": "อยากถึงเป้าหมายการออมภายในกี่เดือน?",
+    "q.saving_timeline.o1": "3 เดือน ⚡",
+    "q.saving_timeline.o2": "6 เดือน 📅",
+    "q.saving_timeline.o3": "1 ปี 🎯",
+    "q.saving_timeline.o4": "3 ปีขึ้นไป 🌳",
+    "q.goal_priority": "ในการไปถึงเป้าหมาย อะไรสำคัญที่สุดสำหรับคุณ?",
+    "q.goal_priority.o1": "⚡ เร็ว — ถึงเป้าเร็วที่สุด",
+    "q.goal_priority.o2": "⚖️ สมดุล — ออมและใช้ชีวิตได้",
+    "q.goal_priority.o3": "🌊 ยืดหยุ่น — ชีวิตมีเรื่องไม่คาดฝัน",
+
+    // Validation
+    "plan.enterValue": "กรุณาใส่จำนวนเพื่อดำเนินการต่อ",
 
     // Legacy questions
     "q.money_feeling": "ตอนนี้คุณรู้สึกยังไงกับเรื่องเงิน?",

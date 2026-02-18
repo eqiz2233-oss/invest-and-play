@@ -56,6 +56,7 @@ const FinancialCalendar = () => {
 
   useEffect(() => {
     calculateSnapshot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const snap = financialSnapshot;
@@ -140,7 +141,7 @@ const FinancialCalendar = () => {
   if (!snap || !monthPlan) return null;
 
   const formatMoney = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 }).format(n);
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfWeek = (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7;
