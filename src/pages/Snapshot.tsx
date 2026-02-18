@@ -3,17 +3,19 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "@/context/GameContext";
 import { ArrowLeft, TrendingUp, PiggyBank, Clock, Shield, DollarSign } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import LanguageToggle from "@/components/LanguageToggle";
 
 const Snapshot = () => {
   const navigate = useNavigate();
   const { financialSnapshot, calculateSnapshot, xp, levels } = useGame();
+  const { t } = useLanguage();
 
   useEffect(() => {
     calculateSnapshot();
   }, []);
 
   const snap = financialSnapshot;
-
   if (!snap) return null;
 
   const formatMoney = (n: number) =>
@@ -22,37 +24,37 @@ const Snapshot = () => {
   const metrics = [
     {
       icon: <DollarSign className="w-5 h-5" />,
-      label: "Monthly Savings",
+      label: t("snap.monthlySavings"),
       value: formatMoney(snap.monthlySavings),
-      sub: `${snap.savingsRate.toFixed(0)}% savings rate`,
+      sub: `${snap.savingsRate.toFixed(0)}% ${t("snap.savingsRate")}`,
       color: "bg-primary/10 text-primary",
     },
     {
       icon: <PiggyBank className="w-5 h-5" />,
-      label: "Annual Savings",
+      label: t("snap.annualSavings"),
       value: formatMoney(snap.annualSavings),
-      sub: `${formatMoney(snap.monthlyIncome)}/mo income`,
+      sub: `${formatMoney(snap.monthlyIncome)}${t("snap.moIncome")}`,
       color: "bg-secondary/30 text-secondary-foreground",
     },
     {
       icon: <TrendingUp className="w-5 h-5" />,
-      label: "Projected Retirement Fund",
+      label: t("snap.retirementFund"),
       value: formatMoney(snap.retirementFund),
-      sub: `At age ${snap.retirementAge} (${snap.retirementAge - snap.currentAge} years)`,
+      sub: `${t("snap.atAge")} ${snap.retirementAge} (${snap.retirementAge - snap.currentAge} ${t("snap.years")})`,
       color: "bg-accent/10 text-accent",
     },
     {
       icon: <Clock className="w-5 h-5" />,
-      label: "Inflation-Adjusted Value",
+      label: t("snap.inflationAdj"),
       value: formatMoney(snap.inflationAdjusted),
-      sub: "In today's dollars",
+      sub: t("snap.todayDollars"),
       color: "bg-primary/10 text-primary",
     },
     {
       icon: <Shield className="w-5 h-5" />,
-      label: "Safe Monthly Spending in Retirement",
+      label: t("snap.safeSpending"),
       value: `${formatMoney(snap.safeSpendingRange[0])} – ${formatMoney(snap.safeSpendingRange[1])}`,
-      sub: `Risk profile: ${snap.riskTolerance}`,
+      sub: `${t("snap.riskProfile")}: ${snap.riskTolerance}`,
       color: "bg-secondary/30 text-secondary-foreground",
     },
   ];
@@ -67,7 +69,8 @@ const Snapshot = () => {
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="font-black text-foreground">Your Financial Snapshot</h1>
+          <h1 className="font-black text-foreground flex-1">{t("snap.title")}</h1>
+          <LanguageToggle />
         </div>
       </header>
 
@@ -78,14 +81,12 @@ const Snapshot = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <span className="text-4xl mb-2 block">📊</span>
-          <h2 className="text-xl font-black text-foreground mb-1">
-            Your Money Report
-          </h2>
+          <h2 className="text-xl font-black text-foreground mb-1">{t("snap.report")}</h2>
           <p className="text-sm text-muted-foreground">
-            Based on your answers across {levels.filter(l => l.answers.length > 0).length} levels
+            {t("snap.basedOn")} {levels.filter(l => l.answers.length > 0).length} {t("snap.levels")}
           </p>
           <div className="xp-badge mt-3 justify-center">
-            ⭐ {xp} XP earned
+            ⭐ {xp} {t("snap.xpEarned")}
           </div>
         </motion.div>
 
@@ -118,16 +119,14 @@ const Snapshot = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          <h3 className="font-bold text-foreground mb-2">Keep playing to refine your plan!</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Complete more levels to get a more accurate snapshot.
-          </p>
+          <h3 className="font-bold text-foreground mb-2">{t("snap.keepPlaying")}</h3>
+          <p className="text-sm text-muted-foreground mb-4">{t("snap.keepPlayingSub")}</p>
           <motion.button
             className="btn-playful bg-primary text-primary-foreground px-8 py-3 w-full"
             onClick={() => navigate("/dashboard")}
             whileHover={{ scale: 1.02 }}
           >
-            Back to Levels
+            {t("snap.backToLevels")}
           </motion.button>
         </motion.div>
       </main>
