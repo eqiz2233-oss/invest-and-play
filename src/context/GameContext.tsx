@@ -32,6 +32,26 @@ export interface FinancialSnapshot {
   existingSavings: number;
 }
 
+export interface QuestStatus {
+  questId: string;
+  weekKey: string;
+  status: "todo" | "done" | "skipped";
+  completedAt?: string;
+}
+
+export interface MonthlyLog {
+  monthKey: string;
+  actualSavings: number;
+  actualInvestment: number;
+  actualExpenses: number;
+  targetSavings: number;
+  targetInvestment: number;
+  spendingLimit: number;
+  rolloverAmount: number;
+  status: "success" | "adjusted" | "trying" | "rollover";
+  xpEarned: number;
+}
+
 interface GameState {
   xp: number;
   streak: number;
@@ -42,6 +62,8 @@ interface GameState {
   selectedPlan: PlanType | null;
   planAnswers: Answer[];
   planQuestionIndex: number;
+  questStatuses: QuestStatus[];
+  monthlyLogs: MonthlyLog[];
   selectPlan: (plan: PlanType) => void;
   submitPlanAnswer: (answer: Answer) => void;
   advancePlanQuestion: () => void;
@@ -51,6 +73,9 @@ interface GameState {
   completeLevel: (levelId: number) => void;
   startLevel: (levelId: number) => void;
   calculateSnapshot: () => void;
+  completeQuest: (questId: string, weekKey: string) => void;
+  skipQuest: (questId: string, weekKey: string, rolloverAmount: number) => void;
+  addMonthlyLog: (log: MonthlyLog) => void;
 }
 
 const STORAGE_KEY = "fingame-state";
@@ -105,19 +130,24 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(() => saved?.selectedPlan ?? null);
   const [planAnswers, setPlanAnswers] = useState<Answer[]>(() => saved?.planAnswers ?? []);
   const [planQuestionIndex, setPlanQuestionIndex] = useState(() => saved?.planQuestionIndex ?? 0);
+  const [questStatuses, setQuestStatuses] = useState<QuestStatus[]>(() => saved?.questStatuses ?? []);
+  const [monthlyLogs, setMonthlyLogs] = useState<MonthlyLog[]>(() => saved?.monthlyLogs ?? []);
 
-  // Save to localStorage on every state change
   useEffect(() => {
     const state = {
       xp, streak, levels, currentLevel, currentQuestion,
       financialSnapshot, selectedPlan, planAnswers, planQuestionIndex,
+      questStatuses, monthlyLogs,
       lastActiveDate: new Date().toISOString(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [xp, streak, levels, currentLevel, currentQuestion, financialSnapshot, selectedPlan, planAnswers, planQuestionIndex]);
+  }, [xp, streak, levels, currentLevel, currentQuestion, financialSnapshot, selectedPlan, planAnswers, planQuestionIndex, questStatuses, monthlyLogs]);
 
   const resetAll = () => {
     localStorage.removeItem(STORAGE_KEY);
+    // Also clear quest data
+    const keys = Object.keys(localStorage).filter(k => k.startsWith("fingame-quests-"));
+    keys.forEach(k => localStorage.removeItem(k));
     setXp(0);
     setStreak(1);
     setLevels(defaultLevels);
@@ -127,6 +157,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setSelectedPlan(null);
     setPlanAnswers([]);
     setPlanQuestionIndex(0);
+    setQuestStatuses([]);
+    setMonthlyLogs([]);
   };
 
   const selectPlan = (plan: PlanType) => {
@@ -180,6 +212,36 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setCurrentQuestion(0);
   };
 
+  const completeQuest = (questId: string, weekKey: string) => {
+    setQuestStatuses(prev => {
+      const filtered = prev.filter(q => !(q.questId === questId && q.weekKey === weekKey));
+      return [...filtered, { questId, weekKey, status: "done" as const, completedAt: new Date().toISOString() }];
+    });
+    setXp(prev => prev + 10);
+  };
+
+  const skipQuest = (questId: string, weekKey: string, rolloverAmount: number) => {
+    setQuestStatuses(prev => {
+      const filtered = prev.filter(q => !(q.questId === questId && q.weekKey === weekKey));
+      return [...filtered, { questId, weekKey, status: "skipped" as const }];
+    });
+    // Store rollover in localStorage for next month
+    if (rolloverAmount > 0) {
+      const now = new Date();
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const key = `fingame-rollover-${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}`;
+      const existing = Number(localStorage.getItem(key) || 0);
+      localStorage.setItem(key, String(existing + rolloverAmount));
+    }
+  };
+
+  const addMonthlyLog = (log: MonthlyLog) => {
+    setMonthlyLogs(prev => {
+      const filtered = prev.filter(l => l.monthKey !== log.monthKey);
+      return [...filtered, log].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+    });
+  };
+
   const calculateSnapshot = () => {
     const allAnswers = planAnswers.length > 0
       ? planAnswers
@@ -196,14 +258,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     const monthlyIncome = getVal("monthly_income") || 30000;
     const rawExpenses = getVal("monthly_expenses") || 20000;
-    // Guard: expenses cannot exceed income
     const monthlyExpenses = Math.min(rawExpenses, monthlyIncome);
     const monthlySavings = Math.max(0, monthlyIncome - monthlyExpenses);
     const annualSavings = monthlySavings * 12;
     const savingsRate = monthlyIncome > 0 ? (monthlySavings / monthlyIncome) * 100 : 0;
     const currentAge = getVal("current_age") || 30;
     const rawRetirementAge = getVal("retirement_age") || 60;
-    // Guard: retirement age must exceed current age
     const retirementAge = Math.max(currentAge + 1, rawRetirementAge);
     const expectedLifespan = getVal("expected_lifespan") || 80;
     const yearsToRetire = retirementAge - currentAge;
@@ -223,17 +283,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       ? (getVal("retirement_savings_manual") || getVal("retirement_savings") || 0)
       : (getVal("current_savings_manual") || getVal("current_savings") || 0);
 
-    // Future value of existing savings
     const fvExisting = existingSavings * Math.pow(1 + returnRate, yearsToRetire);
-
-    // Future value of annual contributions
     const fvContributions = yearsToRetire > 0 && realReturn !== 0
       ? annualSavings * ((Math.pow(1 + realReturn, yearsToRetire) - 1) / realReturn)
       : annualSavings * yearsToRetire;
 
     const retirementFund = fvExisting + fvContributions;
     const inflationAdjusted = retirementFund / Math.pow(1 + inflationRate, yearsToRetire);
-
     const retirementNeeded = retirementMonthlyExpense * 12 * yearsInRetirement;
 
     const riskTolerance = getStr("risk_tolerance") || getStr("investment_experience") || "moderate";
@@ -270,6 +326,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         startLevel, calculateSnapshot, resetAll,
         selectedPlan, planAnswers, planQuestionIndex,
         selectPlan, submitPlanAnswer, advancePlanQuestion, resetPlan,
+        questStatuses, monthlyLogs, completeQuest, skipQuest, addMonthlyLog,
       }}
     >
       {children}
