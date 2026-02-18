@@ -9,7 +9,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import LevelPage from "./pages/LevelPage";
 import Snapshot from "./pages/Snapshot";
-import FinancialCalendar from "./pages/FinancialCalendar";
+import LevelList from "./pages/LevelList";
 import PlanSelection from "./pages/PlanSelection";
 import PlanFlow from "./pages/PlanFlow";
 import NotFound from "./pages/NotFound";
@@ -26,10 +26,10 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/level/:id" element={<LevelPage />} />
+              <Route path="/levels" element={<LevelList />} />
               <Route path="/plan" element={<PlanSelection />} />
               <Route path="/plan/flow" element={<PlanFlow />} />
               <Route path="/snapshot" element={<Snapshot />} />
-              <Route path="/calendar" element={<FinancialCalendar />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
