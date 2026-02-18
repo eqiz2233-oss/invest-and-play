@@ -175,4 +175,26 @@
   .streak-badge {
     @apply inline-flex items-center gap-1 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm font-bold;
   }
+
+  .slider-game {
+    @apply appearance-none w-full h-3 rounded-full bg-muted outline-none cursor-pointer;
+  }
+
+  .slider-game::-webkit-slider-thumb {
+    @apply appearance-none w-8 h-8 rounded-full bg-primary border-4 border-card cursor-pointer;
+    box-shadow: 0 2px 8px hsl(145 63% 42% / 0.4);
+  }
+
+  .slider-game::-moz-range-thumb {
+    @apply w-8 h-8 rounded-full bg-primary border-4 border-card cursor-pointer;
+    box-shadow: 0 2px 8px hsl(145 63% 42% / 0.4);
+  }
+
+  .slider-game::-webkit-slider-runnable-track {
+    @apply h-3 rounded-full;
+  }
+
+  .slider-game:disabled {
+    @apply opacity-60 cursor-not-allowed;
+  }
 }
