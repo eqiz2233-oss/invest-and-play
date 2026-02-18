@@ -21,12 +21,13 @@ const PlanFlow = () => {
 
   const [selectedOption, setSelectedOption] = useState<string | number | null>(null);
   const [sliderValue, setSliderValue] = useState<number | null>(null);
+  const [manualValue, setManualValue] = useState<string>("");
+  const [useManual, setUseManual] = useState(false);
   const [inputValue, setInputValue] = useState<string>("");
   const [submitted, setSubmitted] = useState(false);
 
   const flow = flows.find(f => f.id === selectedPlan);
 
-  // Build active questions (filter out conditional ones whose condition isn't met)
   const activeQuestions: FlowQuestion[] = useMemo(() => {
     if (!flow) return [];
     return flow.questions.filter(q => {
@@ -41,10 +42,16 @@ const PlanFlow = () => {
   const isComplete = planQuestionIndex >= activeQuestions.length;
   const progress = activeQuestions.length > 0 ? (planQuestionIndex / activeQuestions.length) * 100 : 0;
 
-  // Reset local state when question changes
+  // Detect level transitions for visual pacing
+  const currentLevel = question?.level;
+  const prevQuestion = planQuestionIndex > 0 ? activeQuestions[planQuestionIndex - 1] : null;
+  const isNewLevel = prevQuestion ? prevQuestion.level !== currentLevel : true;
+
   useEffect(() => {
     setSelectedOption(null);
     setSliderValue(null);
+    setManualValue("");
+    setUseManual(false);
     setInputValue("");
     setSubmitted(false);
   }, [planQuestionIndex]);
@@ -54,11 +61,10 @@ const PlanFlow = () => {
     return null;
   }
 
-  // Resolve dynamic max
   const getResolvedMax = (q: FlowQuestion): number => {
     if (q.max === "dynamic" && q.maxRef) {
       const ref = planAnswers.find(a => a.questionId === q.maxRef);
-      return ref ? Number(ref.value) : 100000000;
+      return ref ? Number(ref.value) : 100000;
     }
     return (q.max as number) ?? 100000000;
   };
@@ -114,10 +120,18 @@ const PlanFlow = () => {
   }
 
   const resolvedMax = getResolvedMax(question);
+  const effectiveSliderMax = question.sliderMax
+    ? Math.min(question.sliderMax, resolvedMax)
+    : resolvedMax;
   const currentSliderVal = sliderValue ?? question.defaultValue ?? question.min ?? 0;
+  // The actual value used: manual if toggled, otherwise slider
+  const effectiveValue = useManual
+    ? parseInt(manualValue.replace(/,/g, ""), 10) || 0
+    : currentSliderVal;
 
   const qText = t(`q.${question.id}`) !== `q.${question.id}` ? t(`q.${question.id}`) : question.id;
   const qHelp = t(`q.${question.id}.help`) !== `q.${question.id}.help` ? t(`q.${question.id}.help`) : undefined;
+  const levelLabel = t(`level.${currentLevel}`) !== `level.${currentLevel}` ? t(`level.${currentLevel}`) : currentLevel;
 
   const getOptionLabel = (idx: number) => {
     const key = `q.${question.id}.o${idx + 1}`;
@@ -138,7 +152,7 @@ const PlanFlow = () => {
       value = selectedOption;
       label = question.options?.find(o => o.value === selectedOption)?.label || "";
     } else if (question.type === "slider-input") {
-      value = sliderValue ?? question.defaultValue ?? 0;
+      value = effectiveValue;
       label = `${formatNum(value)}${question.suffix ? ` ${question.suffix}` : ""}`;
     } else if (question.type === "number-input") {
       const parsed = parseInt(inputValue.replace(/,/g, ""), 10);
@@ -193,6 +207,7 @@ const PlanFlow = () => {
             transition={{ duration: 0.3 }}
             className="flex-1"
           >
+            {/* Level badge */}
             <div className="mb-8">
               <motion.span
                 className="text-xs font-bold text-primary uppercase mb-2 block"
@@ -201,7 +216,7 @@ const PlanFlow = () => {
                 transition={{ delay: 0.1 }}
               >
                 {selectedPlan === "saving" ? "💰" : selectedPlan === "goal" ? "🎯" : "🏖️"}{" "}
-                {t(`plan.${selectedPlan}.title`)}
+                {levelLabel}
               </motion.span>
               <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2 leading-tight">
                 {qText}
@@ -239,7 +254,7 @@ const PlanFlow = () => {
               </div>
             )}
 
-            {/* Slider + Input */}
+            {/* Slider + Input (capped at sliderMax, manual input for higher) */}
             {question.type === "slider-input" && (
               <motion.div
                 className="card-game"
@@ -249,51 +264,107 @@ const PlanFlow = () => {
                 <div className="text-center mb-4">
                   <motion.span
                     className="text-4xl md:text-5xl font-black text-primary inline-block"
-                    key={currentSliderVal}
+                    key={effectiveValue}
                     initial={{ scale: 1.1 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.15 }}
                   >
-                    {formatNum(currentSliderVal)}{question.suffix ? ` ${question.suffix}` : ""}
+                    {formatNum(effectiveValue)}{question.suffix ? ` ${question.suffix}` : ""}
                   </motion.span>
                 </div>
-                <input
-                  type="range"
-                  min={question.min}
-                  max={resolvedMax}
-                  step={question.step}
-                  value={currentSliderVal}
-                  onChange={(e) => setSliderValue(Number(e.target.value))}
-                  disabled={submitted}
-                  className="slider-game w-full mb-3"
-                />
-                <div className="flex justify-between text-xs font-bold text-muted-foreground mb-4">
-                  <span>{formatNum(question.min ?? 0)}</span>
-                  <span>{formatNum(resolvedMax)}</span>
-                </div>
-                {/* Synced number input */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={formatNum(currentSliderVal)}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/,/g, "").replace(/\D/g, "");
-                      const num = parseInt(raw, 10);
-                      if (!isNaN(num)) {
-                        const clamped = Math.min(Math.max(num, question.min ?? 0), resolvedMax);
-                        setSliderValue(clamped);
-                      } else if (raw === "") {
-                        setSliderValue(question.min ?? 0);
+
+                {/* Slider - always visible */}
+                {!useManual && (
+                  <>
+                    <input
+                      type="range"
+                      min={question.min}
+                      max={effectiveSliderMax}
+                      step={question.step}
+                      value={Math.min(currentSliderVal, effectiveSliderMax)}
+                      onChange={(e) => setSliderValue(Number(e.target.value))}
+                      disabled={submitted}
+                      className="slider-game w-full mb-3"
+                    />
+                    <div className="flex justify-between text-xs font-bold text-muted-foreground mb-4">
+                      <span>{formatNum(question.min ?? 0)}</span>
+                      <span>{formatNum(effectiveSliderMax)}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* Manual number input (inline below slider) */}
+                {useManual && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={manualValue}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/,/g, "").replace(/\D/g, "");
+                        if (raw === "") {
+                          setManualValue("");
+                          return;
+                        }
+                        const num = parseInt(raw, 10);
+                        const clamped = Math.min(num, resolvedMax);
+                        setManualValue(formatNum(clamped));
+                      }}
+                      placeholder={t("plan.enterAmount")}
+                      disabled={submitted}
+                      className="flex-1 text-center text-2xl font-black text-foreground bg-muted rounded-xl px-4 py-3 border-2 border-border focus:border-primary focus:outline-none transition-colors"
+                      autoFocus
+                    />
+                    {question.suffix && (
+                      <span className="text-lg font-bold text-muted-foreground">{question.suffix}</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Toggle between slider and manual */}
+                {question.sliderMax && !submitted && (
+                  <button
+                    onClick={() => {
+                      if (!useManual) {
+                        setManualValue(formatNum(currentSliderVal));
+                      } else {
+                        const parsed = parseInt(manualValue.replace(/,/g, ""), 10) || question.defaultValue || question.min || 0;
+                        setSliderValue(Math.min(parsed, effectiveSliderMax));
                       }
+                      setUseManual(!useManual);
                     }}
-                    disabled={submitted}
-                    className="flex-1 text-center font-bold text-foreground bg-muted rounded-xl px-4 py-2.5 border-2 border-border focus:border-primary focus:outline-none transition-colors"
-                  />
-                  {question.suffix && (
-                    <span className="text-sm font-bold text-muted-foreground">{question.suffix}</span>
-                  )}
-                </div>
+                    className="w-full text-center text-sm font-bold text-primary py-2 rounded-xl hover:bg-primary/5 transition-colors"
+                  >
+                    {useManual ? t("plan.useSlider") : t("plan.enterManual")}
+                  </button>
+                )}
+
+                {/* Synced number input for non-capped sliders */}
+                {!question.sliderMax && !useManual && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={formatNum(currentSliderVal)}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/,/g, "").replace(/\D/g, "");
+                        const num = parseInt(raw, 10);
+                        if (!isNaN(num)) {
+                          const clamped = Math.min(Math.max(num, question.min ?? 0), resolvedMax);
+                          setSliderValue(clamped);
+                        } else if (raw === "") {
+                          setSliderValue(question.min ?? 0);
+                        }
+                      }}
+                      disabled={submitted}
+                      className="flex-1 text-center font-bold text-foreground bg-muted rounded-xl px-4 py-2.5 border-2 border-border focus:border-primary focus:outline-none transition-colors"
+                    />
+                    {question.suffix && (
+                      <span className="text-sm font-bold text-muted-foreground">{question.suffix}</span>
+                    )}
+                  </div>
+                )}
+
                 {submitted && (
                   <motion.p
                     className="mt-4 text-sm font-bold text-primary text-center"
@@ -304,8 +375,7 @@ const PlanFlow = () => {
                   </motion.p>
                 )}
 
-                {/* Gentle feedback for dynamic max */}
-                {question.max === "dynamic" && currentSliderVal >= resolvedMax * 0.95 && !submitted && (
+                {question.max === "dynamic" && currentSliderVal >= resolvedMax * 0.95 && !submitted && !useManual && (
                   <motion.p
                     className="mt-3 text-xs text-muted-foreground text-center italic"
                     initial={{ opacity: 0 }}

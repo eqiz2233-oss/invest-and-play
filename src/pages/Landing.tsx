@@ -20,7 +20,7 @@ const Landing = () => {
         <div className="flex items-center gap-3">
           <LanguageToggle />
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/plan")}
             className="btn-playful bg-primary text-primary-foreground px-6 py-2.5 text-sm"
           >
             {t("landing.startPlaying")}
@@ -47,7 +47,7 @@ const Landing = () => {
               {t("landing.subtitle")}
             </p>
             <motion.button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/plan")}
               className="btn-playful bg-primary text-primary-foreground px-10 py-4 text-lg"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -132,7 +132,7 @@ const Landing = () => {
               {t("landing.readyCtaSub")}
             </p>
             <motion.button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/plan")}
               className="btn-playful bg-primary text-primary-foreground px-8 py-3 text-base"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
