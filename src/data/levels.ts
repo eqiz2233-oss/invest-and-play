@@ -2,10 +2,14 @@ export interface Question {
   id: string;
   text: string;
   helpText?: string;
-  type: "choice" | "number";
+  type: "choice" | "number" | "slider";
   options?: { label: string; value: string | number }[];
   placeholder?: string;
   suffix?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  defaultValue?: number;
 }
 
 export interface Level {
@@ -19,8 +23,8 @@ export interface Level {
 export const levels: Level[] = [
   {
     id: 1,
-    title: "Financial Basics",
-    description: "Let's understand your money mindset",
+    title: "Getting to Know You",
+    description: "Let's understand your vibe",
     emoji: "🌱",
     questions: [
       {
@@ -70,7 +74,7 @@ export const levels: Level[] = [
       },
       {
         id: "emergency_fund",
-        text: "Could you cover 3 months of expenses if you lost income?",
+        text: "Could you cover 3 months of expenses?",
         helpText: "This is called an 'emergency fund'",
         type: "choice",
         options: [
@@ -83,40 +87,52 @@ export const levels: Level[] = [
   },
   {
     id: 2,
-    title: "Income & Expenses",
-    description: "Let's map your money flow",
+    title: "Money Coming In",
+    description: "Let's map your income flow",
     emoji: "💸",
     questions: [
       {
         id: "monthly_income",
         text: "What's your monthly take-home pay?",
-        helpText: "After taxes — what hits your bank account",
-        type: "number",
-        placeholder: "e.g. 5000",
+        helpText: "Slide to your approximate range",
+        type: "slider",
+        min: 1000,
+        max: 20000,
+        step: 500,
+        defaultValue: 5000,
         suffix: "$/month",
+      },
+      {
+        id: "income_stability",
+        text: "How stable is your income?",
+        type: "choice",
+        options: [
+          { label: "💎 Very stable", value: "stable" },
+          { label: "🔀 Mixed — some months vary", value: "mixed" },
+          { label: "🎢 Highly variable", value: "variable" },
+        ],
       },
       {
         id: "monthly_expenses",
         text: "How much do you spend each month?",
-        helpText: "Rent, food, subscriptions, everything",
-        type: "number",
-        placeholder: "e.g. 3500",
+        helpText: "Rent, food, subscriptions — everything",
+        type: "slider",
+        min: 500,
+        max: 15000,
+        step: 250,
+        defaultValue: 3500,
         suffix: "$/month",
       },
       {
         id: "debt_payments",
         text: "Any monthly debt payments?",
         helpText: "Student loans, credit cards, car payments",
-        type: "number",
-        placeholder: "e.g. 500",
+        type: "slider",
+        min: 0,
+        max: 5000,
+        step: 100,
+        defaultValue: 0,
         suffix: "$/month",
-      },
-      {
-        id: "current_savings",
-        text: "How much do you have saved right now?",
-        type: "number",
-        placeholder: "e.g. 10000",
-        suffix: "$",
       },
     ],
   },
@@ -127,10 +143,25 @@ export const levels: Level[] = [
     emoji: "🎯",
     questions: [
       {
+        id: "current_savings",
+        text: "How much do you have saved right now?",
+        helpText: "Your best guess is fine!",
+        type: "choice",
+        options: [
+          { label: "Under $1,000 🌱", value: 500 },
+          { label: "$1K – $5K 🌿", value: 3000 },
+          { label: "$5K – $20K 🌳", value: 10000 },
+          { label: "$20K+ 🏔️", value: 30000 },
+        ],
+      },
+      {
         id: "savings_target",
         text: "How much would you like to save this year?",
-        type: "number",
-        placeholder: "e.g. 12000",
+        type: "slider",
+        min: 1000,
+        max: 50000,
+        step: 1000,
+        defaultValue: 12000,
         suffix: "$",
       },
       {
@@ -166,16 +197,22 @@ export const levels: Level[] = [
       {
         id: "current_age",
         text: "How old are you?",
-        type: "number",
-        placeholder: "e.g. 28",
+        type: "slider",
+        min: 18,
+        max: 70,
+        step: 1,
+        defaultValue: 28,
         suffix: "years",
       },
       {
         id: "retirement_age",
         text: "When do you want to retire?",
         helpText: "There's no wrong answer!",
-        type: "number",
-        placeholder: "e.g. 60",
+        type: "slider",
+        min: 40,
+        max: 75,
+        step: 1,
+        defaultValue: 60,
         suffix: "years old",
       },
       {
@@ -193,14 +230,14 @@ export const levels: Level[] = [
   },
   {
     id: 5,
-    title: "Risk & Investment",
-    description: "Grow your money wisely",
+    title: "Risk & Mindset",
+    description: "Discover your investment style",
     emoji: "📈",
     questions: [
       {
         id: "risk_tolerance",
         text: "If your investment dropped 20%, what would you do?",
-        helpText: "This helps us understand your risk comfort",
+        helpText: "This helps us understand your comfort zone",
         type: "choice",
         options: [
           { label: "😱 Sell everything!", value: "conservative" },
