@@ -1,9 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGame } from "@/context/GameContext";
 import { levels } from "@/data/levels";
 import { ArrowLeft, Check, Sparkles } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import LanguageToggle from "@/components/LanguageToggle";
 
 const formatSliderValue = (value: number, suffix?: string) => {
   const formatted = value >= 1000
@@ -19,6 +21,7 @@ const LevelPage = () => {
   const levelId = Number(id);
   const navigate = useNavigate();
   const { currentQuestion, completeQuestion, completeLevel } = useGame();
+  const { t } = useLanguage();
   const level = levels.find((l) => l.id === levelId);
   const [selectedOption, setSelectedOption] = useState<string | number | null>(null);
   const [sliderValue, setSliderValue] = useState<number | null>(null);
@@ -50,16 +53,16 @@ const LevelPage = () => {
           >
             <span className="text-5xl">{level.emoji}</span>
           </motion.div>
-          <h2 className="text-3xl font-black text-foreground mb-2">Level Complete! 🎉</h2>
+          <h2 className="text-3xl font-black text-foreground mb-2">{t("level.complete")}</h2>
           <p className="text-muted-foreground mb-2">
-            You crushed <span className="font-bold text-foreground">{level.title}</span>!
+            {t("level.youCrushed")} <span className="font-bold text-foreground">{t(`level${level.id}.title`)}</span>!
           </p>
           <p className="text-sm text-muted-foreground mb-6">
-            Your answers are shaping your financial plan.
+            {t("level.answerShaping")}
           </p>
           <div className="xp-badge text-base mb-8 justify-center">
             <Sparkles className="w-4 h-4" />
-            +50 XP earned
+            {t("level.xpEarned")}
           </div>
           <motion.button
             className="btn-playful bg-primary text-primary-foreground px-8 py-4 w-full text-lg"
@@ -70,12 +73,21 @@ const LevelPage = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            Continue Journey →
+            {t("level.continueJourney")}
           </motion.button>
         </motion.div>
       </div>
     );
   }
+
+  // Build translated question text and options
+  const qText = t(`q.${question.id}`) !== `q.${question.id}` ? t(`q.${question.id}`) : question.text;
+  const qHelp = t(`q.${question.id}.help`) !== `q.${question.id}.help` ? t(`q.${question.id}.help`) : question.helpText;
+  const getOptionLabel = (idx: number) => {
+    const key = `q.${question.id}.o${idx + 1}`;
+    const translated = t(key);
+    return translated !== key ? translated : question.options?.[idx]?.label || "";
+  };
 
   const handleSubmit = () => {
     if (submitted) {
@@ -114,14 +126,13 @@ const LevelPage = () => {
     question.type === "choice"
       ? selectedOption !== null
       : question.type === "slider"
-      ? true // slider always has a value
+      ? true
       : false;
 
   const currentSliderVal = sliderValue ?? question.defaultValue ?? question.min ?? 0;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Top bar */}
       <header className="sticky top-0 z-10 bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center gap-4">
           <button
@@ -140,6 +151,7 @@ const LevelPage = () => {
           <span className="text-sm font-bold text-muted-foreground">
             {currentQuestion + 1}/{level.questions.length}
           </span>
+          <LanguageToggle />
         </div>
       </header>
 
@@ -153,7 +165,6 @@ const LevelPage = () => {
             transition={{ duration: 0.3 }}
             className="flex-1"
           >
-            {/* Question */}
             <div className="mb-8">
               <motion.span
                 className="text-xs font-bold text-primary uppercase mb-2 block"
@@ -161,17 +172,16 @@ const LevelPage = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
               >
-                {level.emoji} {level.title}
+                {level.emoji} {t(`level${level.id}.title`)}
               </motion.span>
               <h2 className="text-2xl md:text-3xl font-black text-foreground mb-2 leading-tight">
-                {question.text}
+                {qText}
               </h2>
-              {question.helpText && (
-                <p className="text-sm text-muted-foreground">{question.helpText}</p>
+              {qHelp && (
+                <p className="text-sm text-muted-foreground">{qHelp}</p>
               )}
             </div>
 
-            {/* Choice options */}
             {question.type === "choice" && question.options && (
               <div className="space-y-3">
                 {question.options.map((opt, i) => (
@@ -189,7 +199,7 @@ const LevelPage = () => {
                     transition={{ delay: i * 0.05 }}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-foreground">{opt.label}</span>
+                      <span className="font-bold text-foreground">{getOptionLabel(i)}</span>
                       {submitted && selectedOption === opt.value && (
                         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
                           <Check className="w-5 h-5 text-primary" />
@@ -201,7 +211,6 @@ const LevelPage = () => {
               </div>
             )}
 
-            {/* Slider input */}
             {question.type === "slider" && (
               <motion.div
                 className="card-game"
@@ -239,7 +248,7 @@ const LevelPage = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
-                    ✅ Got it! Great choice.
+                    {t("level.gotIt")}
                   </motion.p>
                 )}
               </motion.div>
@@ -247,7 +256,6 @@ const LevelPage = () => {
           </motion.div>
         </AnimatePresence>
 
-        {/* Submit button — always at bottom */}
         <motion.div
           className="mt-auto pt-6"
           initial={{ opacity: 0, y: 10 }}
@@ -270,7 +278,7 @@ const LevelPage = () => {
                 : {}
             }
           >
-            {submitted ? "Continue →" : "Check"}
+            {submitted ? t("level.continue") : t("level.check")}
           </motion.button>
         </motion.div>
       </main>

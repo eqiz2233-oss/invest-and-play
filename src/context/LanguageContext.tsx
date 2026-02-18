@@ -1,0 +1,424 @@
+import React, { createContext, useContext, useState, ReactNode, useCallback } from "react";
+
+export type Lang = "en" | "th";
+
+interface LanguageContextType {
+  lang: Lang;
+  setLang: (lang: Lang) => void;
+  t: (key: string) => string;
+}
+
+const translations: Record<Lang, Record<string, string>> = {
+  en: {
+    // Landing
+    "landing.badge": "Financial planning that feels like a game",
+    "landing.title1": "Master Your Money,",
+    "landing.title2": "One Level at a Time",
+    "landing.subtitle": "Stop stressing about finances. Answer fun questions, unlock levels, and get a real financial plan — no jargon, no spreadsheets, no boring stuff.",
+    "landing.cta": "🎮 Start Your Journey — Free",
+    "landing.ctaSub": "Takes 5 minutes • No sign-up required",
+    "landing.startPlaying": "Start Playing",
+    "landing.footer": "FinGame — Making financial planning fun 💚",
+    "landing.readyCta": "Ready to level up your finances? 🚀",
+    "landing.readyCtaSub": "5 levels. 5 minutes. A real financial plan.",
+    "landing.letsGo": "Let's Go!",
+    "landing.howItWorks": "How It Works",
+    "landing.feature1Title": "Learn by Playing",
+    "landing.feature1Desc": "Answer simple questions across 5 levels. Each answer secretly builds your financial plan.",
+    "landing.feature2Title": "Real Calculations",
+    "landing.feature2Desc": "Behind the fun UI, we run the same math a financial advisor uses. Savings, retirement, inflation — all covered.",
+    "landing.feature3Title": "No Jargon, No Stress",
+    "landing.feature3Desc": "We speak human. Every question is simple, every answer gives instant feedback. Zero financial jargon.",
+    "landing.step1": "Start with the basics — how you feel about money",
+    "landing.step2": "Tell us about your income and expenses",
+    "landing.step3": "Set your savings goals",
+    "landing.step4": "Plan for retirement (yes, even if you're 25)",
+    "landing.step5": "Discover your risk profile and investment style",
+
+    // Dashboard
+    "dash.yourJourney": "Your Journey",
+    "dash.levelsComplete": "levels complete",
+    "dash.answers": "answers",
+    "dash.viewSnapshot": "📊 View Your Financial Snapshot",
+    "dash.actionPlan": "📅 Your Action Plan",
+    "dash.complete": "Complete",
+
+    // Level page
+    "level.check": "Check",
+    "level.continue": "Continue →",
+    "level.complete": "Level Complete! 🎉",
+    "level.youCrushed": "You crushed",
+    "level.answerShaping": "Your answers are shaping your financial plan.",
+    "level.xpEarned": "+50 XP earned",
+    "level.continueJourney": "Continue Journey →",
+    "level.gotIt": "✅ Got it! Great choice.",
+
+    // Snapshot
+    "snap.title": "Your Financial Snapshot",
+    "snap.report": "Your Money Report",
+    "snap.basedOn": "Based on your answers across",
+    "snap.levels": "levels",
+    "snap.xpEarned": "XP earned",
+    "snap.monthlySavings": "Monthly Savings",
+    "snap.savingsRate": "savings rate",
+    "snap.annualSavings": "Annual Savings",
+    "snap.moIncome": "/mo income",
+    "snap.retirementFund": "Projected Retirement Fund",
+    "snap.atAge": "At age",
+    "snap.years": "years",
+    "snap.inflationAdj": "Inflation-Adjusted Value",
+    "snap.todayDollars": "In today's dollars",
+    "snap.safeSpending": "Safe Monthly Spending in Retirement",
+    "snap.riskProfile": "Risk profile",
+    "snap.keepPlaying": "Keep playing to refine your plan!",
+    "snap.keepPlayingSub": "Complete more levels to get a more accurate snapshot.",
+    "snap.backToLevels": "Back to Levels",
+
+    // Calendar
+    "cal.actionPlan": "Action Plan",
+    "cal.questSchedule": "Your quest schedule",
+    "cal.save": "Save",
+    "cal.invest": "Invest",
+    "cal.spendMax": "Spend max",
+    "cal.saveToday": "💰 Save today",
+    "cal.spendingLimit": "🛍️ Spending limit",
+    "cal.investToday": "📈 Invest today",
+    "cal.onTrack": "You are still on track — keep going! 🎮",
+    "cal.weekMission": "Week {n} Mission",
+    "cal.philosophy": "\"Show them what is possible and doable\" 🎯",
+    "cal.backToLevels": "Back to Levels",
+    "cal.investmentDay": "📈 Investment Day: +1 step toward retirement",
+    "cal.weekCheckpoint": "🎉 Week checkpoint — review your progress",
+    "cal.mission1": "🎯 Build momentum — save consistently",
+    "cal.mission2": "💪 Stay the course — you're on track",
+    "cal.mission3": "🚀 Push harder — almost there",
+    "cal.mission4": "🏆 Finish strong — end the month right",
+    "cal.mission5": "⭐ Bonus week — every bit counts",
+
+    // Weekdays & Months
+    "weekday.mon": "Mon", "weekday.tue": "Tue", "weekday.wed": "Wed",
+    "weekday.thu": "Thu", "weekday.fri": "Fri", "weekday.sat": "Sat", "weekday.sun": "Sun",
+    "month.0": "January", "month.1": "February", "month.2": "March", "month.3": "April",
+    "month.4": "May", "month.5": "June", "month.6": "July", "month.7": "August",
+    "month.8": "September", "month.9": "October", "month.10": "November", "month.11": "December",
+
+    // Levels data
+    "level1.title": "Getting to Know You",
+    "level1.desc": "Let's understand your vibe",
+    "level2.title": "Money Coming In",
+    "level2.desc": "Let's map your income flow",
+    "level3.title": "Savings Goals",
+    "level3.desc": "Dream big, plan smart",
+    "level4.title": "Retirement Planning",
+    "level4.desc": "Future you will thank present you",
+    "level5.title": "Risk & Mindset",
+    "level5.desc": "Discover your investment style",
+
+    // Questions Level 1
+    "q.money_feeling": "How do you feel about money right now?",
+    "q.money_feeling.help": "No wrong answers — just be honest!",
+    "q.money_feeling.o1": "😰 Stressed",
+    "q.money_feeling.o2": "😐 Neutral",
+    "q.money_feeling.o3": "😊 Pretty good",
+    "q.money_feeling.o4": "🚀 Confident",
+    "q.financial_goal": "What's your #1 money goal?",
+    "q.financial_goal.o1": "🏠 Buy a home",
+    "q.financial_goal.o2": "🏖️ Retire early",
+    "q.financial_goal.o3": "💰 Build savings",
+    "q.financial_goal.o4": "📊 Invest more",
+    "q.saving_habit": "Do you save money regularly?",
+    "q.saving_habit.o1": "Every month 💪",
+    "q.saving_habit.o2": "Sometimes 🤷",
+    "q.saving_habit.o3": "Rarely 😅",
+    "q.saving_habit.o4": "Never yet 🙈",
+    "q.biggest_expense": "What eats most of your money?",
+    "q.biggest_expense.o1": "🏠 Rent/Housing",
+    "q.biggest_expense.o2": "🍔 Food & Fun",
+    "q.biggest_expense.o3": "🚗 Transport",
+    "q.biggest_expense.o4": "🛍️ Shopping",
+    "q.emergency_fund": "Could you cover 3 months of expenses?",
+    "q.emergency_fund.help": "This is called an 'emergency fund'",
+    "q.emergency_fund.o1": "Yes, easily ✅",
+    "q.emergency_fund.o2": "Maybe, barely 😬",
+    "q.emergency_fund.o3": "Not yet ❌",
+
+    // Questions Level 2
+    "q.monthly_income": "What's your monthly take-home pay?",
+    "q.monthly_income.help": "Slide to your approximate range",
+    "q.income_stability": "How stable is your income?",
+    "q.income_stability.o1": "💎 Very stable",
+    "q.income_stability.o2": "🔀 Mixed — some months vary",
+    "q.income_stability.o3": "🎢 Highly variable",
+    "q.monthly_expenses": "How much do you spend each month?",
+    "q.monthly_expenses.help": "Rent, food, subscriptions — everything",
+    "q.debt_payments": "Any monthly debt payments?",
+    "q.debt_payments.help": "Student loans, credit cards, car payments",
+
+    // Questions Level 3
+    "q.current_savings": "How much do you have saved right now?",
+    "q.current_savings.help": "Your best guess is fine!",
+    "q.current_savings.o1": "Under $1,000 🌱",
+    "q.current_savings.o2": "$1K – $5K 🌿",
+    "q.current_savings.o3": "$5K – $20K 🌳",
+    "q.current_savings.o4": "$20K+ 🏔️",
+    "q.savings_target": "How much would you like to save this year?",
+    "q.big_purchase": "Planning any big purchases?",
+    "q.big_purchase.o1": "🏠 Home/Apartment",
+    "q.big_purchase.o2": "🚗 Car",
+    "q.big_purchase.o3": "✈️ Big trip",
+    "q.big_purchase.o4": "Nope, just saving 😌",
+    "q.big_purchase_timeline": "When do you want to make that purchase?",
+    "q.big_purchase_timeline.o1": "This year ⚡",
+    "q.big_purchase_timeline.o2": "2-3 years 📅",
+    "q.big_purchase_timeline.o3": "5+ years 🔮",
+    "q.big_purchase_timeline.o4": "No rush 🐢",
+
+    // Questions Level 4
+    "q.current_age": "How old are you?",
+    "q.retirement_age": "When do you want to retire?",
+    "q.retirement_age.help": "There's no wrong answer!",
+    "q.retirement_lifestyle": "What retirement lifestyle do you imagine?",
+    "q.retirement_lifestyle.o1": "🏡 Simple & peaceful",
+    "q.retirement_lifestyle.o2": "🌍 Travel the world",
+    "q.retirement_lifestyle.o3": "🏢 Start a business",
+    "q.retirement_lifestyle.o4": "🎨 Pursue passions",
+
+    // Questions Level 5
+    "q.risk_tolerance": "If your investment dropped 20%, what would you do?",
+    "q.risk_tolerance.help": "This helps us understand your comfort zone",
+    "q.risk_tolerance.o1": "😱 Sell everything!",
+    "q.risk_tolerance.o2": "😟 Worry but hold",
+    "q.risk_tolerance.o3": "😎 Buy more!",
+    "q.investment_experience": "Have you invested before?",
+    "q.investment_experience.o1": "Never 🌱",
+    "q.investment_experience.o2": "A little bit 🌿",
+    "q.investment_experience.o3": "Regularly 🌳",
+    "q.investment_experience.o4": "I'm a pro 🏔️",
+    "q.investment_interest": "What interests you most?",
+    "q.investment_interest.o1": "📊 Stocks & ETFs",
+    "q.investment_interest.o2": "🏠 Real estate",
+    "q.investment_interest.o3": "₿ Crypto",
+    "q.investment_interest.o4": "🏦 Safe savings",
+  },
+  th: {
+    // Landing
+    "landing.badge": "วางแผนการเงินแบบเล่นเกม",
+    "landing.title1": "จัดการเงินของคุณ",
+    "landing.title2": "ทีละด่าน",
+    "landing.subtitle": "เลิกเครียดเรื่องเงิน ตอบคำถามสนุกๆ ปลดล็อกด่าน แล้วได้แผนการเงินจริงๆ — ไม่มีศัพท์ยาก ไม่มีสเปรดชีต ไม่น่าเบื่อ",
+    "landing.cta": "🎮 เริ่มเลย — ฟรี",
+    "landing.ctaSub": "ใช้เวลาแค่ 5 นาที • ไม่ต้องสมัคร",
+    "landing.startPlaying": "เริ่มเล่น",
+    "landing.footer": "FinGame — ทำให้การวางแผนการเงินเป็นเรื่องสนุก 💚",
+    "landing.readyCta": "พร้อมอัปเลเวลการเงินของคุณหรือยัง? 🚀",
+    "landing.readyCtaSub": "5 ด่าน. 5 นาที. แผนการเงินจริงๆ",
+    "landing.letsGo": "ไปเลย!",
+    "landing.howItWorks": "ทำงานยังไง",
+    "landing.feature1Title": "เรียนรู้ผ่านการเล่น",
+    "landing.feature1Desc": "ตอบคำถามง่ายๆ ใน 5 ด่าน แต่ละคำตอบจะสร้างแผนการเงินให้คุณแบบลับๆ",
+    "landing.feature2Title": "คำนวณจริงจัง",
+    "landing.feature2Desc": "เบื้องหลังความสนุก เราใช้สูตรเดียวกับที่ปรึกษาการเงินใช้ ทั้งเงินออม เกษียณ เงินเฟ้อ ครบหมด",
+    "landing.feature3Title": "ไม่มีศัพท์ยาก ไม่เครียด",
+    "landing.feature3Desc": "เราพูดภาษาคน ทุกคำถามเข้าใจง่าย ทุกคำตอบได้ฟีดแบ็คทันที ไม่มีศัพท์การเงิน",
+    "landing.step1": "เริ่มจากพื้นฐาน — คุณรู้สึกยังไงกับเงิน",
+    "landing.step2": "บอกเราเรื่องรายได้และค่าใช้จ่าย",
+    "landing.step3": "ตั้งเป้าหมายการออม",
+    "landing.step4": "วางแผนเกษียณ (แม้จะอายุ 25 ก็ทำได้)",
+    "landing.step5": "ค้นหาสไตล์การลงทุนของคุณ",
+
+    // Dashboard
+    "dash.yourJourney": "การเดินทางของคุณ",
+    "dash.levelsComplete": "ด่านสำเร็จ",
+    "dash.answers": "คำตอบ",
+    "dash.viewSnapshot": "📊 ดูสรุปการเงินของคุณ",
+    "dash.actionPlan": "📅 แผนปฏิบัติการ",
+    "dash.complete": "สำเร็จ",
+
+    // Level page
+    "level.check": "เช็ค",
+    "level.continue": "ถัดไป →",
+    "level.complete": "ผ่านด่าน! 🎉",
+    "level.youCrushed": "คุณผ่าน",
+    "level.answerShaping": "คำตอบของคุณกำลังสร้างแผนการเงินอยู่",
+    "level.xpEarned": "+50 XP ได้แล้ว",
+    "level.continueJourney": "ไปต่อเลย →",
+    "level.gotIt": "✅ เข้าใจแล้ว เลือกได้ดีมาก",
+
+    // Snapshot
+    "snap.title": "สรุปการเงินของคุณ",
+    "snap.report": "รายงานการเงิน",
+    "snap.basedOn": "จากคำตอบของคุณใน",
+    "snap.levels": "ด่าน",
+    "snap.xpEarned": "XP ที่ได้",
+    "snap.monthlySavings": "เงินออมรายเดือน",
+    "snap.savingsRate": "อัตราการออม",
+    "snap.annualSavings": "เงินออมรายปี",
+    "snap.moIncome": "/เดือน รายได้",
+    "snap.retirementFund": "กองทุนเกษียณ (ประมาณการ)",
+    "snap.atAge": "ตอนอายุ",
+    "snap.years": "ปี",
+    "snap.inflationAdj": "มูลค่าหลังปรับเงินเฟ้อ",
+    "snap.todayDollars": "เทียบค่าเงินวันนี้",
+    "snap.safeSpending": "ค่าใช้จ่ายที่ปลอดภัยต่อเดือนตอนเกษียณ",
+    "snap.riskProfile": "ระดับความเสี่ยง",
+    "snap.keepPlaying": "เล่นต่อเพื่อปรับแผนให้แม่นขึ้น!",
+    "snap.keepPlayingSub": "ผ่านด่านเพิ่มจะได้ภาพรวมที่ชัดเจนขึ้น",
+    "snap.backToLevels": "กลับไปด่าน",
+
+    // Calendar
+    "cal.actionPlan": "แผนปฏิบัติการ",
+    "cal.questSchedule": "ตารางเควสของคุณ",
+    "cal.save": "ออม",
+    "cal.invest": "ลงทุน",
+    "cal.spendMax": "ใช้จ่ายสูงสุด",
+    "cal.saveToday": "💰 ออมวันนี้",
+    "cal.spendingLimit": "🛍️ วงเงินใช้จ่าย",
+    "cal.investToday": "📈 ลงทุนวันนี้",
+    "cal.onTrack": "คุณยังอยู่ในแผน — ไปต่อเลย! 🎮",
+    "cal.weekMission": "เควสสัปดาห์ที่ {n}",
+    "cal.philosophy": "\"บอกสิ่งที่เป็นไปได้และทำได้จริง\" 🎯",
+    "cal.backToLevels": "กลับไปด่าน",
+    "cal.investmentDay": "📈 วันลงทุน: +1 ก้าวสู่เกษียณ",
+    "cal.weekCheckpoint": "🎉 เช็คพอยท์ประจำสัปดาห์ — ทบทวนความก้าวหน้า",
+    "cal.mission1": "🎯 สร้างโมเมนตัม — ออมให้สม่ำเสมอ",
+    "cal.mission2": "💪 รักษาจังหวะ — คุณทำได้ดีอยู่แล้ว",
+    "cal.mission3": "🚀 เร่งอีกนิด — ใกล้เป้าแล้ว",
+    "cal.mission4": "🏆 จบเดือนให้สวย — สู้ต่อไป",
+    "cal.mission5": "⭐ สัปดาห์โบนัส — ทุกบาททุกสตางค์มีค่า",
+
+    // Weekdays & Months
+    "weekday.mon": "จ.", "weekday.tue": "อ.", "weekday.wed": "พ.",
+    "weekday.thu": "พฤ.", "weekday.fri": "ศ.", "weekday.sat": "ส.", "weekday.sun": "อา.",
+    "month.0": "มกราคม", "month.1": "กุมภาพันธ์", "month.2": "มีนาคม", "month.3": "เมษายน",
+    "month.4": "พฤษภาคม", "month.5": "มิถุนายน", "month.6": "กรกฎาคม", "month.7": "สิงหาคม",
+    "month.8": "กันยายน", "month.9": "ตุลาคม", "month.10": "พฤศจิกายน", "month.11": "ธันวาคม",
+
+    // Levels data
+    "level1.title": "ทำความรู้จักกัน",
+    "level1.desc": "มาเข้าใจสไตล์ของคุณ",
+    "level2.title": "เงินเข้า",
+    "level2.desc": "มาดูรายได้ของคุณ",
+    "level3.title": "เป้าหมายการออม",
+    "level3.desc": "ฝันให้ใหญ่ วางแผนให้ฉลาด",
+    "level4.title": "วางแผนเกษียณ",
+    "level4.desc": "ตัวคุณในอนาคตจะขอบคุณ",
+    "level5.title": "ความเสี่ยงและแนวคิด",
+    "level5.desc": "ค้นพบสไตล์การลงทุนของคุณ",
+
+    // Questions Level 1
+    "q.money_feeling": "ตอนนี้คุณรู้สึกยังไงกับเรื่องเงิน?",
+    "q.money_feeling.help": "ไม่มีคำตอบผิด — ตอบตามจริงได้เลย!",
+    "q.money_feeling.o1": "😰 เครียด",
+    "q.money_feeling.o2": "😐 เฉยๆ",
+    "q.money_feeling.o3": "😊 ค่อนข้างดี",
+    "q.money_feeling.o4": "🚀 มั่นใจมาก",
+    "q.financial_goal": "เป้าหมายการเงินอันดับ 1 ของคุณคือ?",
+    "q.financial_goal.o1": "🏠 ซื้อบ้าน",
+    "q.financial_goal.o2": "🏖️ เกษียณเร็ว",
+    "q.financial_goal.o3": "💰 เก็บเงินให้มากขึ้น",
+    "q.financial_goal.o4": "📊 ลงทุนเพิ่ม",
+    "q.saving_habit": "คุณออมเงินเป็นประจำไหม?",
+    "q.saving_habit.o1": "ทุกเดือน 💪",
+    "q.saving_habit.o2": "บางที 🤷",
+    "q.saving_habit.o3": "นานๆ ที 😅",
+    "q.saving_habit.o4": "ยังไม่เคย 🙈",
+    "q.biggest_expense": "อะไรกินเงินคุณมากที่สุด?",
+    "q.biggest_expense.o1": "🏠 ค่าเช่า/ที่อยู่",
+    "q.biggest_expense.o2": "🍔 อาหารและสังสรรค์",
+    "q.biggest_expense.o3": "🚗 ค่าเดินทาง",
+    "q.biggest_expense.o4": "🛍️ ช้อปปิ้ง",
+    "q.emergency_fund": "ถ้าต้องจ่ายค่าใช้จ่าย 3 เดือน ไหวไหม?",
+    "q.emergency_fund.help": "นี่คือสิ่งที่เรียกว่า 'เงินสำรองฉุกเฉิน'",
+    "q.emergency_fund.o1": "ไหวสบาย ✅",
+    "q.emergency_fund.o2": "อาจจะพอได้ 😬",
+    "q.emergency_fund.o3": "ยังไม่ไหว ❌",
+
+    // Questions Level 2
+    "q.monthly_income": "รายได้ต่อเดือนของคุณเท่าไหร่?",
+    "q.monthly_income.help": "เลื่อนไปที่ช่วงที่ใกล้เคียง",
+    "q.income_stability": "รายได้ของคุณมั่นคงแค่ไหน?",
+    "q.income_stability.o1": "💎 มั่นคงมาก",
+    "q.income_stability.o2": "🔀 ปนกัน — บางเดือนไม่เท่ากัน",
+    "q.income_stability.o3": "🎢 ขึ้นลงมาก",
+    "q.monthly_expenses": "คุณใช้จ่ายเดือนละเท่าไหร่?",
+    "q.monthly_expenses.help": "ค่าเช่า อาหาร สมัครบริการ — ทุกอย่าง",
+    "q.debt_payments": "มีหนี้ที่ต้องจ่ายรายเดือนไหม?",
+    "q.debt_payments.help": "สินเชื่อ บัตรเครดิต ผ่อนรถ",
+
+    // Questions Level 3
+    "q.current_savings": "ตอนนี้คุณมีเงินเก็บเท่าไหร่?",
+    "q.current_savings.help": "เดาคร่าวๆ ก็ได้นะ!",
+    "q.current_savings.o1": "ต่ำกว่า $1,000 🌱",
+    "q.current_savings.o2": "$1K – $5K 🌿",
+    "q.current_savings.o3": "$5K – $20K 🌳",
+    "q.current_savings.o4": "$20K ขึ้นไป 🏔️",
+    "q.savings_target": "ปีนี้อยากเก็บเงินได้เท่าไหร่?",
+    "q.big_purchase": "วางแผนซื้อของชิ้นใหญ่ไหม?",
+    "q.big_purchase.o1": "🏠 บ้าน/คอนโด",
+    "q.big_purchase.o2": "🚗 รถ",
+    "q.big_purchase.o3": "✈️ ทริปใหญ่",
+    "q.big_purchase.o4": "ไม่ แค่เก็บเงิน 😌",
+    "q.big_purchase_timeline": "อยากซื้อเมื่อไหร่?",
+    "q.big_purchase_timeline.o1": "ปีนี้ ⚡",
+    "q.big_purchase_timeline.o2": "2-3 ปี 📅",
+    "q.big_purchase_timeline.o3": "5 ปีขึ้นไป 🔮",
+    "q.big_purchase_timeline.o4": "ไม่รีบ 🐢",
+
+    // Questions Level 4
+    "q.current_age": "คุณอายุเท่าไหร่?",
+    "q.retirement_age": "อยากเกษียณตอนอายุเท่าไหร่?",
+    "q.retirement_age.help": "ไม่มีคำตอบผิดเลยนะ!",
+    "q.retirement_lifestyle": "จินตนาการชีวิตเกษียณแบบไหน?",
+    "q.retirement_lifestyle.o1": "🏡 เรียบง่าย สงบสุข",
+    "q.retirement_lifestyle.o2": "🌍 เที่ยวรอบโลก",
+    "q.retirement_lifestyle.o3": "🏢 เปิดธุรกิจ",
+    "q.retirement_lifestyle.o4": "🎨 ทำตามความฝัน",
+
+    // Questions Level 5
+    "q.risk_tolerance": "ถ้าเงินลงทุนลดลง 20% คุณจะทำยังไง?",
+    "q.risk_tolerance.help": "เราอยากเข้าใจความสบายใจของคุณ",
+    "q.risk_tolerance.o1": "😱 ขายหมด!",
+    "q.risk_tolerance.o2": "😟 กังวลแต่ถือต่อ",
+    "q.risk_tolerance.o3": "😎 ซื้อเพิ่ม!",
+    "q.investment_experience": "เคยลงทุนมาก่อนไหม?",
+    "q.investment_experience.o1": "ไม่เคย 🌱",
+    "q.investment_experience.o2": "นิดหน่อย 🌿",
+    "q.investment_experience.o3": "ลงทุนเป็นประจำ 🌳",
+    "q.investment_experience.o4": "เป็นโปรแล้ว 🏔️",
+    "q.investment_interest": "สนใจอะไรมากที่สุด?",
+    "q.investment_interest.o1": "📊 หุ้นและ ETF",
+    "q.investment_interest.o2": "🏠 อสังหาริมทรัพย์",
+    "q.investment_interest.o3": "₿ คริปโต",
+    "q.investment_interest.o4": "🏦 เงินฝากปลอดภัย",
+  },
+};
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export const useLanguage = () => {
+  const ctx = useContext(LanguageContext);
+  if (!ctx) throw new Error("useLanguage must be used within LanguageProvider");
+  return ctx;
+};
+
+export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+  const [lang, setLang] = useState<Lang>(() => {
+    const saved = localStorage.getItem("fingame-lang");
+    return (saved === "th" ? "th" : "en") as Lang;
+  });
+
+  const handleSetLang = useCallback((newLang: Lang) => {
+    setLang(newLang);
+    localStorage.setItem("fingame-lang", newLang);
+  }, []);
+
+  const t = useCallback((key: string) => {
+    return translations[lang][key] || translations.en[key] || key;
+  }, [lang]);
+
+  return (
+    <LanguageContext.Provider value={{ lang, setLang: handleSetLang, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};

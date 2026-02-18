@@ -1,7 +1,9 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "@/context/GameContext";
+import { useLanguage } from "@/context/LanguageContext";
+import LanguageToggle from "@/components/LanguageToggle";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -41,18 +43,12 @@ interface MonthPlan {
   weeks: WeekPlan[];
 }
 
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-const INVESTMENT_DATES = [5, 15, 25]; // Fixed investment dates
+const INVESTMENT_DATES = [5, 15, 25];
 
 const FinancialCalendar = () => {
   const navigate = useNavigate();
   const { financialSnapshot, calculateSnapshot } = useGame();
+  const { t } = useLanguage();
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
   const [currentYear] = useState(() => new Date().getFullYear());
   const [selectedDay, setSelectedDay] = useState<DayPlan | null>(null);
@@ -64,12 +60,20 @@ const FinancialCalendar = () => {
 
   const snap = financialSnapshot;
 
+  const weekdays = [
+    t("weekday.mon"), t("weekday.tue"), t("weekday.wed"),
+    t("weekday.thu"), t("weekday.fri"), t("weekday.sat"), t("weekday.sun"),
+  ];
+
+  const missions = [
+    t("cal.mission1"), t("cal.mission2"), t("cal.mission3"),
+    t("cal.mission4"), t("cal.mission5"),
+  ];
+
   const monthPlan: MonthPlan | null = useMemo(() => {
     if (!snap) return null;
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const monthlyInvestment = snap.monthlySavings > 0
-      ? Math.round(snap.monthlySavings * 0.4)
-      : 0;
+    const monthlyInvestment = snap.monthlySavings > 0 ? Math.round(snap.monthlySavings * 0.4) : 0;
     const monthlySavingsOnly = snap.monthlySavings - monthlyInvestment;
     const maxSpending = snap.monthlyIncome - snap.monthlySavings;
 
@@ -78,14 +82,6 @@ const FinancialCalendar = () => {
     const weeklySpending = Math.round(maxSpending / 4);
     const dailySavings = Math.round(monthlySavingsOnly / daysInMonth);
     const dailySpending = Math.round(maxSpending / daysInMonth);
-
-    const missions = [
-      "🎯 Build momentum — save consistently",
-      "💪 Stay the course — you're on track",
-      "🚀 Push harder — almost there",
-      "🏆 Finish strong — end the month right",
-      "⭐ Bonus week — every bit counts",
-    ];
 
     const days: DayPlan[] = Array.from({ length: daysInMonth }, (_, i) => {
       const date = i + 1;
@@ -101,15 +97,14 @@ const FinancialCalendar = () => {
         investmentAmount: investPerDay,
         isInvestmentDay,
         mission: isInvestmentDay
-          ? `📈 Investment Day: +1 step toward retirement`
+          ? t("cal.investmentDay")
           : date % 7 === 0
-          ? `🎉 Week checkpoint — review your progress`
+          ? t("cal.weekCheckpoint")
           : undefined,
       };
     });
 
-    // Group into weeks
-    const firstDayOfWeek = (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7; // Monday=0
+    const firstDayOfWeek = (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7;
     const weeks: WeekPlan[] = [];
     let weekDays: DayPlan[] = [];
     let weekNum = 1;
@@ -137,10 +132,10 @@ const FinancialCalendar = () => {
       totalIncome: snap.monthlyIncome,
       plannedSavings: monthlySavingsOnly,
       plannedInvestment: monthlyInvestment,
-      maxSpending: maxSpending,
+      maxSpending,
       weeks,
     };
-  }, [snap, currentMonth, currentYear]);
+  }, [snap, currentMonth, currentYear, t]);
 
   if (!snap || !monthPlan) return null;
 
@@ -163,9 +158,10 @@ const FinancialCalendar = () => {
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <div className="flex-1">
-            <h1 className="font-black text-foreground">Action Plan</h1>
-            <p className="text-xs text-muted-foreground">Your quest schedule</p>
+            <h1 className="font-black text-foreground">{t("cal.actionPlan")}</h1>
+            <p className="text-xs text-muted-foreground">{t("cal.questSchedule")}</p>
           </div>
+          <LanguageToggle />
           <div className="flex gap-1 bg-muted rounded-xl p-1">
             <button
               onClick={() => setView("calendar")}
@@ -188,7 +184,6 @@ const FinancialCalendar = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-lg">
-        {/* Monthly summary */}
         <motion.div
           className="card-game mb-6 bg-primary/5 border-primary/20"
           initial={{ opacity: 0, y: 10 }}
@@ -202,7 +197,7 @@ const FinancialCalendar = () => {
               <ChevronLeft className="w-4 h-4 text-muted-foreground" />
             </button>
             <h2 className="font-black text-foreground">
-              {MONTH_NAMES[currentMonth]} {currentYear}
+              {t(`month.${currentMonth}`)} {currentYear}
             </h2>
             <button
               onClick={() => setCurrentMonth(m => m < 11 ? m + 1 : 0)}
@@ -215,17 +210,17 @@ const FinancialCalendar = () => {
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-card rounded-xl p-3 border border-border">
               <Wallet className="w-4 h-4 mx-auto mb-1 text-primary" />
-              <p className="text-xs text-muted-foreground">Save</p>
+              <p className="text-xs text-muted-foreground">{t("cal.save")}</p>
               <p className="font-black text-foreground text-sm">{formatMoney(monthPlan.plannedSavings)}</p>
             </div>
             <div className="bg-card rounded-xl p-3 border border-border">
               <TrendingUp className="w-4 h-4 mx-auto mb-1 text-accent" />
-              <p className="text-xs text-muted-foreground">Invest</p>
+              <p className="text-xs text-muted-foreground">{t("cal.invest")}</p>
               <p className="font-black text-foreground text-sm">{formatMoney(monthPlan.plannedInvestment)}</p>
             </div>
             <div className="bg-card rounded-xl p-3 border border-border">
               <Zap className="w-4 h-4 mx-auto mb-1 text-secondary" />
-              <p className="text-xs text-muted-foreground">Spend max</p>
+              <p className="text-xs text-muted-foreground">{t("cal.spendMax")}</p>
               <p className="font-black text-foreground text-sm">{formatMoney(monthPlan.maxSpending)}</p>
             </div>
           </div>
@@ -239,28 +234,23 @@ const FinancialCalendar = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              {/* Calendar grid */}
               <div className="card-game mb-4">
                 <div className="grid grid-cols-7 gap-1 mb-2">
-                  {WEEKDAYS.map(d => (
+                  {weekdays.map(d => (
                     <div key={d} className="text-center text-xs font-bold text-muted-foreground py-1">
                       {d}
                     </div>
                   ))}
                 </div>
                 <div className="grid grid-cols-7 gap-1">
-                  {/* Empty cells */}
                   {Array.from({ length: firstDayOfWeek }).map((_, i) => (
                     <div key={`empty-${i}`} className="h-10" />
                   ))}
-                  {/* Days */}
                   {Array.from({ length: daysInMonth }, (_, i) => {
                     const date = i + 1;
                     const isToday = isCurrentMonth && today.getDate() === date;
                     const isInvestment = INVESTMENT_DATES.includes(date);
-                    const dayData = monthPlan.weeks
-                      .flatMap(w => w.days)
-                      .find(d => d.date === date);
+                    const dayData = monthPlan.weeks.flatMap(w => w.days).find(d => d.date === date);
                     const isSelected = selectedDay?.date === date;
 
                     return (
@@ -288,7 +278,6 @@ const FinancialCalendar = () => {
                 </div>
               </div>
 
-              {/* Selected day detail */}
               <AnimatePresence>
                 {selectedDay && (
                   <motion.div
@@ -300,7 +289,7 @@ const FinancialCalendar = () => {
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-lg">📅</span>
                       <h3 className="font-black text-foreground">
-                        {MONTH_NAMES[currentMonth]} {selectedDay.date}
+                        {t(`month.${currentMonth}`)} {selectedDay.date}
                       </h3>
                     </div>
 
@@ -312,23 +301,23 @@ const FinancialCalendar = () => {
 
                     <div className="space-y-2">
                       <div className="flex justify-between items-center py-2 border-b border-border">
-                        <span className="text-sm text-muted-foreground">💰 Save today</span>
+                        <span className="text-sm text-muted-foreground">{t("cal.saveToday")}</span>
                         <span className="font-bold text-primary">{formatMoney(selectedDay.savingsTarget)}</span>
                       </div>
                       <div className="flex justify-between items-center py-2 border-b border-border">
-                        <span className="text-sm text-muted-foreground">🛍️ Spending limit</span>
+                        <span className="text-sm text-muted-foreground">{t("cal.spendingLimit")}</span>
                         <span className="font-bold text-foreground">{formatMoney(selectedDay.spendingLimit)}</span>
                       </div>
                       {selectedDay.isInvestmentDay && (
                         <div className="flex justify-between items-center py-2 border-b border-border">
-                          <span className="text-sm text-muted-foreground">📈 Invest today</span>
+                          <span className="text-sm text-muted-foreground">{t("cal.investToday")}</span>
                           <span className="font-bold text-accent">{formatMoney(selectedDay.investmentAmount)}</span>
                         </div>
                       )}
                     </div>
 
                     <p className="text-xs text-muted-foreground mt-3 italic">
-                      You are still on track — keep going! 🎮
+                      {t("cal.onTrack")}
                     </p>
                   </motion.div>
                 )}
@@ -356,7 +345,7 @@ const FinancialCalendar = () => {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-bold text-foreground text-sm">
-                        Week {week.weekNumber} Mission
+                        {t("cal.weekMission").replace("{n}", String(week.weekNumber))}
                       </h3>
                       <p className="text-xs text-muted-foreground">{week.mission}</p>
                     </div>
@@ -364,20 +353,19 @@ const FinancialCalendar = () => {
 
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="bg-primary/5 rounded-lg p-2">
-                      <p className="text-[10px] text-muted-foreground font-bold">SAVE</p>
+                      <p className="text-[10px] text-muted-foreground font-bold">{t("cal.save").toUpperCase()}</p>
                       <p className="text-sm font-black text-primary">{formatMoney(week.savingsTarget)}</p>
                     </div>
                     <div className="bg-accent/5 rounded-lg p-2">
-                      <p className="text-[10px] text-muted-foreground font-bold">INVEST</p>
+                      <p className="text-[10px] text-muted-foreground font-bold">{t("cal.invest").toUpperCase()}</p>
                       <p className="text-sm font-black text-accent">{formatMoney(week.investmentAmount)}</p>
                     </div>
                     <div className="bg-secondary/10 rounded-lg p-2">
-                      <p className="text-[10px] text-muted-foreground font-bold">SPEND MAX</p>
+                      <p className="text-[10px] text-muted-foreground font-bold">{t("cal.spendMax").toUpperCase()}</p>
                       <p className="text-sm font-black text-secondary-foreground">{formatMoney(week.spendingLimit)}</p>
                     </div>
                   </div>
 
-                  {/* Day indicators */}
                   <div className="flex gap-1 mt-3">
                     {week.days.map(day => (
                       <div
@@ -395,7 +383,6 @@ const FinancialCalendar = () => {
           )}
         </AnimatePresence>
 
-        {/* Bottom encouragement */}
         <motion.div
           className="mt-6 text-center"
           initial={{ opacity: 0 }}
@@ -403,14 +390,14 @@ const FinancialCalendar = () => {
           transition={{ delay: 0.5 }}
         >
           <p className="text-sm text-muted-foreground italic">
-            "Show them what is possible and doable" 🎯
+            {t("cal.philosophy")}
           </p>
           <motion.button
             className="btn-playful bg-primary text-primary-foreground px-8 py-3 w-full mt-4"
             onClick={() => navigate("/dashboard")}
             whileHover={{ scale: 1.02 }}
           >
-            Back to Levels
+            {t("cal.backToLevels")}
           </motion.button>
         </motion.div>
       </main>
