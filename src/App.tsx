@@ -12,6 +12,7 @@ import Snapshot from "./pages/Snapshot";
 import LevelList from "./pages/LevelList";
 import PlanSelection from "./pages/PlanSelection";
 import PlanFlow from "./pages/PlanFlow";
+import Sandbox from "./pages/Sandbox";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/plan" element={<PlanSelection />} />
               <Route path="/plan/flow" element={<PlanFlow />} />
               <Route path="/snapshot" element={<Snapshot />} />
+              <Route path="/sandbox" element={<Sandbox />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

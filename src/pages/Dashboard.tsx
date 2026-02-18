@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { useGame } from "@/context/GameContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { levels } from "@/data/levels";
+import { getRank, getNextRank } from "@/data/ranks";
+import RankBadge from "@/components/RankBadge";
+import TinyWin, { showTinyWin } from "@/components/TinyWin";
 import LanguageToggle from "@/components/LanguageToggle";
 import {
   Star, Flame, ChevronRight, ChevronLeft, Trophy, Lock, Home, Calendar, ScrollText,
@@ -34,14 +37,31 @@ const Dashboard = () => {
   const {
     xp, streak, levels: levelProgress, startLevel, resetAll,
     financialSnapshot, calculateSnapshot, questStatuses, completeQuest, skipQuest, monthlyLogs,
+    plans, activePlanId, switchPlan, awardXP,
   } = useGame();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [activeTab, setActiveTab] = useState<"home" | "calendar" | "history">("home");
+  const [rankUpModal, setRankUpModal] = useState<{ emoji: string; name: string; desc: string } | null>(null);
 
   useEffect(() => {
     calculateSnapshot();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Rank-up detection
+  const prevRankId = useMemo(() => getRank(xp - 1).id, []);
+  useEffect(() => {
+    const current = getRank(xp);
+    if (current.id !== prevRankId && xp > 0) {
+      setRankUpModal({
+        emoji: current.emoji,
+        name: lang === "th" ? current.nameTH : current.name,
+        desc: lang === "th" ? current.descriptionTH : current.description,
+      });
+      const timer = setTimeout(() => setRankUpModal(null), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [xp]);
 
   const snap = financialSnapshot;
   const isExample = !snap || snap.monthlyIncome === 30000;
@@ -54,6 +74,34 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
+      {/* Rank Up Modal */}
+      <AnimatePresence>
+        {rankUpModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setRankUpModal(null)}
+          >
+            <motion.div
+              className="card-game text-center p-8 max-w-sm mx-4"
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.5 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            >
+              <p className="text-sm font-black text-primary uppercase mb-2">🎉 {t("rank.rankUp")}</p>
+              <span className="text-6xl block my-4">{rankUpModal.emoji}</span>
+              <h2 className="text-2xl font-black text-foreground">{rankUpModal.name}</h2>
+              <p className="text-sm text-muted-foreground mt-2">{rankUpModal.desc}</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <TinyWin />
+
       {/* Header */}
       <header className="sticky top-0 z-20 bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -71,7 +119,7 @@ const Dashboard = () => {
         </div>
         {/* Desktop tabs */}
         <div className="hidden md:flex container mx-auto px-4 border-t border-border">
-          {tabs.map(tab => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -103,7 +151,7 @@ const Dashboard = () => {
           )}
           {activeTab === "history" && (
             <motion.div key="history" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-              <HistoryTab />
+              <HistoryTab setActiveTab={setActiveTab} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -112,7 +160,7 @@ const Dashboard = () => {
       {/* Mobile bottom tab bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-card border-t border-border">
         <div className="flex justify-around items-center py-2">
-          {tabs.map(tab => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -138,13 +186,14 @@ const Dashboard = () => {
 // ═══════════════════════════════════
 const HomeTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financialSnapshot"]; isExample: boolean }) => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const {
     xp, streak, levels: levelProgress, startLevel, resetAll,
     questStatuses, completeQuest, skipQuest,
+    plans, activePlanId, switchPlan,
   } = useGame();
 
-  const completedCount = levelProgress.filter(l => l.status === "complete").length;
+  const completedCount = levelProgress.filter((l) => l.status === "complete").length;
   const monthlySavings = snap?.monthlySavings ?? 10000;
   const monthlyExpenses = snap?.monthlyExpenses ?? 20000;
   const savingsRate = snap?.savingsRate ?? 33;
@@ -156,60 +205,41 @@ const HomeTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financ
   const remaining = daysLeftInMonth();
 
   const weekKey = getWeekKey();
-  const isInvestmentWeek = INVESTMENT_DATES.some(d => {
+  const isInvestmentWeek = INVESTMENT_DATES.some((d) => {
     const diff = d - dayOfMonth;
     return diff >= 0 && diff < 7;
   });
 
   const weeklyQuests = useMemo(() => {
-    const quests = [
-      {
-        id: "save_week",
-        icon: "💰",
-        title: t("home.questSave"),
-        amount: Math.round(monthlySavings / 4),
-        description: "",
-        type: "save",
-      },
-      {
-        id: "invest_check",
-        icon: "📈",
-        title: t("home.questReview"),
-        amount: null as number | null,
-        description: "",
-        type: "review",
-      },
-      {
-        id: "expense_log",
-        icon: "🧾",
-        title: t("home.questTrack"),
-        amount: Math.round(monthlyExpenses / 4),
-        description: "",
-        type: "track",
-      },
-    ] as Array<{ id: string; icon: string; title: string; amount: number | null; description: string; type: string }>;
+    const quests: Array<{ id: string; icon: string; title: string; amount: number | null; type: string }> = [
+      { id: "save_week", icon: "💰", title: t("home.questSave"), amount: Math.round(monthlySavings / 4), type: "save" },
+      { id: "track_expenses", icon: "🧾", title: t("home.questTrack"), amount: Math.round(monthlyExpenses / 4), type: "track" },
+    ];
     if (isInvestmentWeek) {
-      quests.push({
-        id: "invest_this_week",
-        icon: "🏦",
-        title: t("home.questInvest"),
-        amount: Math.round((monthlySavings * 0.4) / 3),
-        description: "DCA",
-        type: "invest",
-      });
+      quests.push({ id: "invest_now", icon: "📈", title: t("home.questInvest"), amount: Math.round((monthlySavings * 0.4) / 3), type: "invest" });
     }
     return quests;
   }, [monthlySavings, monthlyExpenses, isInvestmentWeek, t]);
 
   const getQuestStatus = (questId: string) =>
-    questStatuses.find(q => q.questId === questId && q.weekKey === weekKey)?.status || "todo";
+    questStatuses.find((q) => q.questId === questId && q.weekKey === weekKey)?.status || "todo";
 
   const [confettiQuest, setConfettiQuest] = useState<string | null>(null);
+  const questDoneCount = weeklyQuests.filter((q) => getQuestStatus(q.id) === "done").length;
 
   const handleComplete = (questId: string) => {
+    const alreadyDone = questDoneCount;
     completeQuest(questId, weekKey);
     setConfettiQuest(questId);
     setTimeout(() => setConfettiQuest(null), 1500);
+
+    if (alreadyDone === 0) {
+      showTinyWin("🎉", lang === "th" ? "เยี่ยมมาก! เริ่มต้นได้สมบูรณ์แบบ!" : "Amazing! Perfect start!");
+    } else if (alreadyDone + 1 >= 3) {
+      showTinyWin("🔥", "Hat-trick! 3 เควสติดกัน!");
+    } else {
+      showTinyWin("✅", "+20 XP — สัปดาห์นี้ดีมาก!");
+    }
   };
 
   const borderColor = (type: string) => {
@@ -221,14 +251,38 @@ const HomeTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financ
     }
   };
 
-  // Active level
-  const activeLevel = levelProgress.find(l => l.status === "active");
-  const activeLevelData = activeLevel ? levels.find(l => l.id === activeLevel.levelId) : null;
+  const activeLevel = levelProgress.find((l) => l.status === "active");
+  const activeLevelData = activeLevel ? levels.find((l) => l.id === activeLevel.levelId) : null;
   const levelQuestionsDone = activeLevel?.answers.length || 0;
   const levelQuestionsTotal = activeLevelData?.questions.length || 0;
 
   return (
     <div className="space-y-6">
+      {/* Plan switcher */}
+      {plans.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          {plans.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => switchPlan(p.id)}
+              className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
+                p.id === activePlanId
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {p.emoji} {p.name} {p.id === activePlanId && "✓"}
+            </button>
+          ))}
+          <button
+            onClick={() => navigate("/plan")}
+            className="shrink-0 px-4 py-2 rounded-full text-sm font-bold bg-muted text-muted-foreground hover:bg-muted/80"
+          >
+            + {lang === "th" ? "เพิ่มแผน" : "Add Plan"}
+          </button>
+        </div>
+      )}
+
       {isExample && (
         <div className="bg-secondary/10 border border-secondary/30 rounded-2xl p-3 text-center text-sm text-secondary-foreground">
           ✨ {t("home.exampleNote")}
@@ -252,17 +306,11 @@ const HomeTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financ
             </div>
             <div className="mt-3">
               <div className="progress-track h-2">
-                <motion.div
-                  className="progress-fill h-2"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(monthProgress, 100)}%` }}
-                  transition={{ duration: 0.8 }}
-                />
+                <motion.div className="progress-fill h-2" initial={{ width: 0 }} animate={{ width: `${Math.min(monthProgress, 100)}%` }} transition={{ duration: 0.8 }} />
               </div>
               <p className="text-xs text-muted-foreground mt-1">{remaining} {t("home.daysLeft")}</p>
             </div>
           </div>
-          {/* Circular progress */}
           <div className="relative w-16 h-16 shrink-0 ml-4">
             <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
               <circle cx="18" cy="18" r="15.5" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
@@ -280,11 +328,7 @@ const HomeTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financ
             </span>
           </div>
         </div>
-
-        <button
-          onClick={() => navigate("/snapshot")}
-          className="mt-3 text-xs font-bold text-primary hover:underline"
-        >
+        <button onClick={() => navigate("/snapshot")} className="mt-3 text-xs font-bold text-primary hover:underline">
           {t("home.viewSnapshot")}
         </button>
       </div>
@@ -293,11 +337,10 @@ const HomeTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financ
       <div>
         <h3 className="font-black text-foreground mb-3">📋 {t("home.weeklyQuests")}</h3>
         <div className="space-y-3">
-          {weeklyQuests.map(quest => {
+          {weeklyQuests.map((quest) => {
             const status = getQuestStatus(quest.id);
             const isDone = status === "done";
             const isSkipped = status === "skipped";
-
             return (
               <motion.div
                 key={quest.id}
@@ -306,7 +349,6 @@ const HomeTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financ
                 }`}
                 layout
               >
-                {/* Confetti */}
                 {confettiQuest === quest.id && (
                   <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
                     {[...Array(8)].map((_, i) => (
@@ -325,28 +367,16 @@ const HomeTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financ
                     ))}
                   </div>
                 )}
-
-                {/* XP float */}
                 {confettiQuest === quest.id && (
-                  <motion.div
-                    className="absolute top-2 right-4 text-sm font-black text-primary"
-                    initial={{ opacity: 1, y: 0 }}
-                    animate={{ opacity: 0, y: -30 }}
-                    transition={{ duration: 1 }}
-                  >
-                    +10 XP
+                  <motion.div className="absolute top-2 right-4 text-sm font-black text-primary" initial={{ opacity: 1, y: 0 }} animate={{ opacity: 0, y: -30 }} transition={{ duration: 1 }}>
+                    +20 XP
                   </motion.div>
                 )}
-
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{quest.icon}</span>
                   <div className="flex-1">
-                    <p className={`font-bold text-foreground text-sm ${isDone ? "line-through opacity-60" : ""}`}>
-                      {quest.title}
-                    </p>
-                    {quest.amount !== null && (
-                      <p className="text-xs text-muted-foreground">{formatMoney(quest.amount)}</p>
-                    )}
+                    <p className={`font-bold text-foreground text-sm ${isDone ? "line-through opacity-60" : ""}`}>{quest.title}</p>
+                    {quest.amount !== null && <p className="text-xs text-muted-foreground">{formatMoney(quest.amount)}</p>}
                   </div>
                   {isDone ? (
                     <span className="text-primary font-bold text-sm">✅</span>
@@ -398,40 +428,49 @@ const HomeTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financ
         </motion.div>
       )}
 
-      {/* All Levels Link */}
-      <motion.div
-        className="card-game cursor-pointer hover:border-primary/30 transition-colors"
-        onClick={() => navigate("/levels")}
-        whileHover={{ y: -2 }}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      {/* All Levels + Sandbox Links */}
+      <div className="grid grid-cols-2 gap-3">
+        <motion.div
+          className="card-game cursor-pointer hover:border-primary/30 transition-colors py-4"
+          onClick={() => navigate("/levels")}
+          whileHover={{ y: -2 }}
+        >
+          <div className="text-center">
             <span className="text-xl">🎮</span>
-            <div>
-              <h3 className="font-bold text-foreground text-sm">{t("home.allLevels")}</h3>
-              <p className="text-xs text-muted-foreground">{completedCount}/5 {t("dash.levelsComplete")}</p>
-            </div>
+            <p className="text-xs font-bold text-foreground mt-1">{t("home.allLevels")}</p>
+            <p className="text-[10px] text-muted-foreground">{completedCount}/5</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground" />
-        </div>
-      </motion.div>
+        </motion.div>
+        <motion.div
+          className="card-game cursor-pointer hover:border-primary/30 transition-colors py-4"
+          onClick={() => navigate("/sandbox")}
+          whileHover={{ y: -2 }}
+        >
+          <div className="text-center">
+            <span className="text-xl">🧮</span>
+            <p className="text-xs font-bold text-foreground mt-1">{t("sandbox.link")}</p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Quick Stats + Rank */}
+      <div className="flex items-center justify-center gap-3 flex-wrap">
+        <RankBadge xp={xp} size="sm" />
+        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">🔥 {streak} {lang === "th" ? "วัน" : "days"}</span>
+        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">💰 {Math.round(savingsRate)}%</span>
+      </div>
 
       {/* Plan CTA */}
-      <motion.button
-        className="w-full btn-playful bg-primary text-primary-foreground py-4 text-lg"
-        onClick={() => navigate("/plan")}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        {t("plan.startPlanning")}
-      </motion.button>
-
-      {/* Quick Stats */}
-      <div className="flex items-center justify-center gap-4 text-sm">
-        <span className="inline-flex items-center gap-1 text-muted-foreground">⭐ {xp} XP</span>
-        <span className="inline-flex items-center gap-1 text-muted-foreground">🔥 {streak} {t("home.daysLeft").split(" ")[0] === "days" ? "days" : "วัน"}</span>
-        <span className="inline-flex items-center gap-1 text-muted-foreground">💰 {Math.round(savingsRate)}%</span>
-      </div>
+      {plans.length === 0 && (
+        <motion.button
+          className="w-full btn-playful bg-primary text-primary-foreground py-4 text-lg"
+          onClick={() => navigate("/plan")}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {t("plan.startPlanning")}
+        </motion.button>
+      )}
 
       {/* Reset */}
       <div className="text-center">
@@ -451,11 +490,22 @@ const HomeTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financ
 // ═══════════════════════════════════
 const CalendarTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["financialSnapshot"]; isExample: boolean }) => {
   const { t } = useLanguage();
-  const { skipQuest } = useGame();
+  const { completeQuest, awardXP } = useGame();
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [showSkipMsg, setShowSkipMsg] = useState(false);
+
+  const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`;
+  const calKey = `fingame-calendar-${monthKey}`;
+
+  const [completedDays, setCompletedDays] = useState<number[]>(() => {
+    try { return JSON.parse(localStorage.getItem(calKey) || "[]"); } catch { return []; }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(calKey, JSON.stringify(completedDays));
+  }, [completedDays, calKey]);
 
   const monthlySavings = snap?.monthlySavings ?? 10000;
   const monthlyExpenses = snap?.monthlyExpenses ?? 20000;
@@ -473,10 +523,10 @@ const CalendarTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["fi
   ];
 
   const getDotColor = (date: number) => {
-    if (INVESTMENT_DATES.includes(date)) return "bg-accent"; // blue
+    if (INVESTMENT_DATES.includes(date)) return "bg-accent";
     const dayOfWeek = (new Date(currentYear, currentMonth, date).getDay() + 6) % 7;
-    if (dayOfWeek === 0) return "bg-primary"; // Monday = green savings
-    if (dayOfWeek === 6) return "bg-secondary"; // Sunday = yellow checkpoint
+    if (dayOfWeek === 0) return "bg-primary";
+    if (dayOfWeek === 6) return "bg-secondary";
     return null;
   };
 
@@ -488,7 +538,6 @@ const CalendarTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["fi
     return null;
   };
 
-  // Mock progress (in real app, would use actual tracked data)
   const savingsProgress = isCurrentMonth ? Math.min(100, (today.getDate() / daysInMonth) * 100 * 0.9) : 80;
   const investProgress = isCurrentMonth ? Math.min(100, (today.getDate() / daysInMonth) * 100 * 0.7) : 67;
   const expenseProgress = isCurrentMonth ? Math.min(100, (today.getDate() / daysInMonth) * 100 * 0.85) : 78;
@@ -501,19 +550,40 @@ const CalendarTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["fi
   };
 
   const handlePrevMonth = () => {
-    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
-    else setCurrentMonth(m => m - 1);
+    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear((y) => y - 1); }
+    else setCurrentMonth((m) => m - 1);
     setSelectedDay(null);
   };
   const handleNextMonth = () => {
-    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1); }
-    else setCurrentMonth(m => m + 1);
+    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear((y) => y + 1); }
+    else setCurrentMonth((m) => m + 1);
+    setSelectedDay(null);
+  };
+
+  const handleDayDone = (date: number) => {
+    if (!completedDays.includes(date)) {
+      setCompletedDays((prev) => [...prev, date]);
+      awardXP("complete_quest");
+      showTinyWin("✅", "+20 XP — ทำแล้ว!");
+    }
     setSelectedDay(null);
   };
 
   const handleSkip = () => {
     setShowSkipMsg(true);
-    setTimeout(() => setShowSkipMsg(false), 3000);
+    if (selectedDay) {
+      const eventType = getEventType(selectedDay);
+      let amount = 0;
+      if (eventType === "invest") amount = Math.round(monthlyInvestment / 3);
+      else if (eventType === "save") amount = Math.round(savingsOnly / 4);
+      if (amount > 0) {
+        const nextMonth = new Date(currentYear, currentMonth + 1, 1);
+        const key = `fingame-rollover-${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}`;
+        const existing = Number(localStorage.getItem(key) || 0);
+        localStorage.setItem(key, String(existing + amount));
+      }
+    }
+    setTimeout(() => { setShowSkipMsg(false); setSelectedDay(null); }, 2000);
   };
 
   return (
@@ -524,7 +594,6 @@ const CalendarTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["fi
         </div>
       )}
 
-      {/* Calendar Grid */}
       <div className="card-game">
         <div className="flex items-center justify-between mb-4">
           <button onClick={handlePrevMonth} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
@@ -537,7 +606,7 @@ const CalendarTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["fi
         </div>
 
         <div className="grid grid-cols-7 gap-1 mb-2">
-          {weekdays.map(d => (
+          {weekdays.map((d) => (
             <div key={d} className="text-center text-[10px] font-bold text-muted-foreground py-1">{d}</div>
           ))}
         </div>
@@ -548,6 +617,7 @@ const CalendarTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["fi
             const isToday = isCurrentMonth && today.getDate() === date;
             const dot = getDotColor(date);
             const isSelected = selectedDay === date;
+            const isDayDone = completedDays.includes(date);
 
             return (
               <motion.button
@@ -558,12 +628,17 @@ const CalendarTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["fi
                     ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background"
                     : isToday
                     ? "bg-primary/20 text-primary border-2 border-primary/40"
+                    : isDayDone
+                    ? "bg-primary/10 text-primary/60"
                     : "bg-muted/50 text-foreground hover:bg-muted"
                 }`}
                 whileTap={{ scale: 0.9 }}
               >
                 {date}
-                {dot && !isSelected && (
+                {isDayDone && dot && !isSelected && (
+                  <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[8px]">✅</span>
+                )}
+                {!isDayDone && dot && !isSelected && (
                   <span className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${dot}`} />
                 )}
               </motion.button>
@@ -590,20 +665,6 @@ const CalendarTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["fi
                 <p className="text-sm font-bold text-accent">📈 {t("cal.investDay")}</p>
                 <p className="text-sm text-foreground">{t("cal.invest")}: {formatMoney(Math.round(monthlyInvestment / 3))}</p>
                 <p className="text-xs text-muted-foreground italic">DCA — {t("cal.dcaTip")}</p>
-                <div className="flex gap-2 mt-3">
-                  <motion.button
-                    className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold"
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    ✅ {t("quest.markDone")}
-                  </motion.button>
-                  <button
-                    className="flex-1 py-2 rounded-xl border border-border text-sm text-muted-foreground hover:bg-muted transition-colors"
-                    onClick={handleSkip}
-                  >
-                    {t("cal.skipMonth")}
-                  </button>
-                </div>
               </div>
             )}
             {getEventType(selectedDay) === "save" && (
@@ -618,12 +679,26 @@ const CalendarTab = ({ snap, isExample }: { snap: ReturnType<typeof useGame>["fi
               </div>
             )}
 
+            {!completedDays.includes(selectedDay) && getEventType(selectedDay) !== "checkpoint" && (
+              <div className="flex gap-2 mt-3">
+                <motion.button
+                  className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold"
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleDayDone(selectedDay)}
+                >
+                  ✅ {t("quest.markDone")}
+                </motion.button>
+                <button
+                  className="flex-1 py-2 rounded-xl border border-border text-sm text-muted-foreground hover:bg-muted transition-colors"
+                  onClick={handleSkip}
+                >
+                  {t("cal.skipMonth")}
+                </button>
+              </div>
+            )}
+
             {showSkipMsg && (
-              <motion.p
-                className="mt-3 text-sm text-primary font-bold text-center"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
+              <motion.p className="mt-3 text-sm text-primary font-bold text-center" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 {t("cal.skipConfirm")}
               </motion.p>
             )}
@@ -652,12 +727,7 @@ const SummaryBar = ({ label, current, target, pct, color }: { label: string; cur
       <span className="text-foreground font-bold">{formatMoney(current)} / {formatMoney(target)} ({Math.round(pct)}%)</span>
     </div>
     <div className="h-2 rounded-full bg-muted overflow-hidden">
-      <motion.div
-        className={`h-full rounded-full ${color}`}
-        initial={{ width: 0 }}
-        animate={{ width: `${Math.min(pct, 100)}%` }}
-        transition={{ duration: 0.8 }}
-      />
+      <motion.div className={`h-full rounded-full ${color}`} initial={{ width: 0 }} animate={{ width: `${Math.min(pct, 100)}%` }} transition={{ duration: 0.8 }} />
     </div>
   </div>
 );
@@ -665,21 +735,24 @@ const SummaryBar = ({ label, current, target, pct, color }: { label: string; cur
 // ═══════════════════════════════════
 // TAB 3: HISTORY
 // ═══════════════════════════════════
-const HistoryTab = () => {
-  const { t } = useLanguage();
+const HistoryTab = ({ setActiveTab }: { setActiveTab: (tab: "home" | "calendar" | "history") => void }) => {
+  const { t, lang } = useLanguage();
   const { xp, monthlyLogs, streak } = useGame();
 
   const monthsActive = monthlyLogs.length;
-  const streakMonths = monthlyLogs.filter(l => l.status === "success" || l.status === "adjusted").length;
+  const streakMonths = monthlyLogs.filter((l) => l.status === "success" || l.status === "adjusted").length;
 
   const statusConfig: Record<string, { badge: string; color: string; borderColor: string }> = {
     success: { badge: `✅ ${t("history.success")}`, color: "bg-primary/10 text-primary", borderColor: "border-l-[hsl(var(--primary))]" },
     adjusted: { badge: `⚡ ${t("history.adjusted")}`, color: "bg-secondary/10 text-secondary-foreground", borderColor: "border-l-[hsl(var(--secondary))]" },
-    trying: { badge: `💪 ${t("history.trying")}`, color: "bg-[hsl(25,90%,55%)]/10 text-[hsl(25,90%,45%)]", borderColor: "border-l-[hsl(25,90%,55%)]" },
+    trying: { badge: `💪 ${t("history.trying")}`, color: "bg-destructive/10 text-destructive", borderColor: "border-l-[hsl(var(--destructive))]" },
     rollover: { badge: `🔄 ${t("history.rollover")}`, color: "bg-accent/10 text-accent", borderColor: "border-l-[hsl(var(--accent))]" },
   };
 
-  // Month name helper
+  const monthLabels = lang === "th"
+    ? ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
+    : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
   const getMonthName = (key: string) => {
     const [y, m] = key.split("-");
     const monthIdx = parseInt(m) - 1;
@@ -688,7 +761,6 @@ const HistoryTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="card-game text-center">
         <h2 className="font-black text-foreground text-lg">📜 {t("history.title")}</h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -698,21 +770,27 @@ const HistoryTab = () => {
 
       {/* Streak */}
       <div className="card-game">
-        <h3 className="font-bold text-foreground mb-2">🔥 {t("history.streak")}</h3>
+        <h3 className="font-bold text-foreground mb-2">🔥 {streak} {t("history.streak")}</h3>
         <div className="flex items-center gap-1">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={i}
-              className={`flex-1 h-3 rounded-full ${i < streakMonths ? "bg-primary" : "bg-muted"}`}
-            />
-          ))}
+          {Array.from({ length: 12 }).map((_, i) => {
+            const isSuccess = i < streakMonths;
+            return (
+              <div
+                key={i}
+                className={`flex-1 h-3 rounded-full ${isSuccess ? "bg-primary" : "bg-muted"}`}
+              />
+            );
+          })}
         </div>
         <div className="flex justify-between mt-1">
-          {["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."].map((m, i) => (
+          {monthLabels.map((m, i) => (
             <span key={i} className="text-[8px] text-muted-foreground">{m}</span>
           ))}
         </div>
       </div>
+
+      {/* Rank Card */}
+      <RankBadge xp={xp} size="lg" />
 
       {/* Monthly Cards or Empty State */}
       {monthlyLogs.length === 0 ? (
@@ -720,10 +798,17 @@ const HistoryTab = () => {
           <span className="text-4xl">🌱</span>
           <h3 className="font-black text-foreground mt-3">{t("history.empty")}</h3>
           <p className="text-sm text-muted-foreground mt-1">{t("history.emptySub")}</p>
+          <motion.button
+            className="mt-4 btn-playful bg-primary text-primary-foreground px-6 py-2"
+            onClick={() => setActiveTab("home")}
+            whileHover={{ scale: 1.02 }}
+          >
+            {t("history.emptyBtn")}
+          </motion.button>
         </div>
       ) : (
         <div className="space-y-4">
-          {monthlyLogs.map(log => {
+          {monthlyLogs.map((log) => {
             const cfg = statusConfig[log.status] || statusConfig.trying;
             const savPct = log.targetSavings > 0 ? (log.actualSavings / log.targetSavings) * 100 : 0;
             return (
