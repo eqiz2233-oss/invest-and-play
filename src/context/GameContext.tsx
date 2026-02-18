@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { PlanType } from "@/data/planFlows";
 
 export interface Answer {
   questionId: string;
@@ -34,6 +35,15 @@ interface GameState {
   currentLevel: number | null;
   currentQuestion: number;
   financialSnapshot: FinancialSnapshot | null;
+  // Plan flow state
+  selectedPlan: PlanType | null;
+  planAnswers: Answer[];
+  planQuestionIndex: number;
+  selectPlan: (plan: PlanType) => void;
+  submitPlanAnswer: (answer: Answer) => void;
+  advancePlanQuestion: () => void;
+  resetPlan: () => void;
+  // Legacy
   completeQuestion: (answer: Answer) => void;
   completeLevel: (levelId: number) => void;
   startLevel: (levelId: number) => void;
@@ -63,6 +73,32 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [currentLevel, setCurrentLevel] = useState<number | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [financialSnapshot, setFinancialSnapshot] = useState<FinancialSnapshot | null>(null);
+
+  // Plan flow state
+  const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
+  const [planAnswers, setPlanAnswers] = useState<Answer[]>([]);
+  const [planQuestionIndex, setPlanQuestionIndex] = useState(0);
+
+  const selectPlan = (plan: PlanType) => {
+    setSelectedPlan(plan);
+    setPlanAnswers([]);
+    setPlanQuestionIndex(0);
+  };
+
+  const submitPlanAnswer = (answer: Answer) => {
+    setPlanAnswers(prev => [...prev.filter(a => a.questionId !== answer.questionId), answer]);
+    setXp(prev => prev + 10);
+  };
+
+  const advancePlanQuestion = () => {
+    setPlanQuestionIndex(prev => prev + 1);
+  };
+
+  const resetPlan = () => {
+    setSelectedPlan(null);
+    setPlanAnswers([]);
+    setPlanQuestionIndex(0);
+  };
 
   const completeQuestion = (answer: Answer) => {
     setLevels((prev) =>
@@ -95,7 +131,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const calculateSnapshot = () => {
-    const allAnswers = levels.flatMap((l) => l.answers);
+    // Use plan answers if available, otherwise fall back to level answers
+    const allAnswers = planAnswers.length > 0
+      ? planAnswers
+      : levels.flatMap((l) => l.answers);
     const getVal = (id: string) => {
       const a = allAnswers.find((a) => a.questionId === id);
       return a ? Number(a.value) : 0;
@@ -143,6 +182,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         xp, streak, levels, currentLevel, currentQuestion,
         financialSnapshot, completeQuestion, completeLevel,
         startLevel, calculateSnapshot,
+        selectedPlan, planAnswers, planQuestionIndex,
+        selectPlan, submitPlanAnswer, advancePlanQuestion, resetPlan,
       }}
     >
       {children}

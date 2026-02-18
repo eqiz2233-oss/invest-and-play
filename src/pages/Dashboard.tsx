@@ -132,8 +132,25 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* New plan flow CTA */}
+        <motion.div
+          className="mt-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <motion.button
+            className="w-full btn-playful bg-primary text-primary-foreground py-4 text-lg"
+            onClick={() => navigate("/plan")}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {t("plan.startPlanning")}
+          </motion.button>
+        </motion.div>
+
         {completedCount >= 2 && (
-          <div className="mt-8 space-y-3">
+          <div className="mt-4 space-y-3">
             <motion.button
               className="w-full btn-playful bg-secondary text-secondary-foreground py-4 text-base"
               onClick={() => navigate("/snapshot")}
