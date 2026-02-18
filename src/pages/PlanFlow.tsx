@@ -426,6 +426,11 @@ const PlanFlow = () => {
                     {t("level.gotIt")}
                   </motion.p>
                 )}
+                {question.type === "number-input" && inputValue === "" && !submitted && (
+                  <p className="mt-3 text-xs text-muted-foreground text-center italic">
+                    {t("plan.enterValue")}
+                  </p>
+                )}
               </motion.div>
             )}
           </motion.div>

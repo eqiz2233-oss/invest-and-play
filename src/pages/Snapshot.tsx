@@ -1,25 +1,50 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "@/context/GameContext";
-import { ArrowLeft, TrendingUp, PiggyBank, Clock, Shield, DollarSign } from "lucide-react";
+import { ArrowLeft, TrendingUp, PiggyBank, Clock, Shield, DollarSign, Target } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageToggle from "@/components/LanguageToggle";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Snapshot = () => {
   const navigate = useNavigate();
-  const { financialSnapshot, calculateSnapshot, xp, levels } = useGame();
+  const { financialSnapshot, calculateSnapshot, xp, levels, selectedPlan } = useGame();
   const { t } = useLanguage();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     calculateSnapshot();
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const snap = financialSnapshot;
-  if (!snap) return null;
 
   const formatMoney = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 }).format(n);
+
+  if (loading || !snap) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-10 bg-card border-b border-border">
+          <div className="container mx-auto px-4 py-3 flex items-center gap-4">
+            <Skeleton className="w-9 h-9 rounded-xl" />
+            <Skeleton className="h-6 w-48" />
+            <div className="flex-1" />
+            <LanguageToggle />
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-8 max-w-lg space-y-4">
+          <Skeleton className="h-32 rounded-2xl" />
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-2xl" />
+          ))}
+        </main>
+      </div>
+    );
+  }
 
   const metrics = [
     {
@@ -58,6 +83,12 @@ const Snapshot = () => {
       color: "bg-secondary/30 text-secondary-foreground",
     },
   ];
+
+  // Add retirement target card for retirement plan users
+  const isRetirement = selectedPlan === "retirement";
+  const retirementProgress = snap.retirementNeeded > 0
+    ? Math.min(100, (snap.inflationAdjusted / snap.retirementNeeded) * 100)
+    : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -111,6 +142,39 @@ const Snapshot = () => {
               </div>
             </motion.div>
           ))}
+
+          {/* Retirement Target Card */}
+          {isRetirement && snap.retirementNeeded > 0 && (
+            <motion.div
+              className="card-game border-accent/30"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: metrics.length * 0.1 }}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center shrink-0">
+                  <Target className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-muted-foreground uppercase">{t("snap.retirementTarget")}</p>
+                  <p className="text-xl font-black text-foreground">{formatMoney(snap.retirementNeeded)}</p>
+                  <div className="mt-2">
+                    <div className="w-full bg-muted rounded-full h-2.5">
+                      <motion.div
+                        className="bg-accent h-2.5 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${retirementProgress}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {retirementProgress.toFixed(0)}% {t("snap.goalReached")} • {snap.yearsInRetirement} {t("snap.yearsRetirement")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         <motion.div

@@ -2,7 +2,7 @@ export type PlanType = "saving" | "goal" | "retirement";
 
 export interface FlowQuestion {
   id: string;
-  level: string; // level grouping key for visual pacing
+  level: string;
   type: "choice" | "slider-input" | "number-input";
   conditionalOn?: { questionId: string; values: (string | number)[] };
   options?: { label: string; value: string | number }[];
@@ -12,7 +12,7 @@ export interface FlowQuestion {
   step?: number;
   defaultValue?: number;
   suffix?: string;
-  sliderMax?: number; // cap slider at this value, allow manual input above
+  sliderMax?: number;
 }
 
 export interface Flow {
@@ -169,23 +169,54 @@ const sharedQuestions: FlowQuestion[] = [
   },
 ];
 
+// Saving flow: no big_purchase questions, add saving_timeline
+const savingQuestions: FlowQuestion[] = [
+  ...sharedQuestions.slice(0, 9), // income through saving_goal
+  sharedQuestions[11], // emergency_readiness
+  sharedQuestions[12], // financial_discipline
+  {
+    id: "saving_timeline",
+    level: "goals",
+    type: "choice",
+    options: [
+      { label: "3 months", value: "3" },
+      { label: "6 months", value: "6" },
+      { label: "1 year", value: "12" },
+      { label: "3+ years", value: "36" },
+    ],
+  },
+];
+
+// Goal flow: keep big_purchase, add goal_priority
+const goalQuestions: FlowQuestion[] = [
+  ...sharedQuestions, // all shared including big_purchase
+  {
+    id: "goal_priority",
+    level: "goals",
+    type: "choice",
+    options: [
+      { label: "Speed — reach it ASAP", value: "speed" },
+      { label: "Balance — save and live well", value: "balance" },
+      { label: "Flexible — life happens", value: "flexible" },
+    ],
+  },
+];
+
 export const flows: Flow[] = [
   {
     id: "saving",
-    questions: [...sharedQuestions],
+    questions: savingQuestions,
   },
   {
     id: "goal",
-    questions: [...sharedQuestions],
+    questions: goalQuestions,
   },
   {
     id: "retirement",
     questions: [
-      // Income
       sharedQuestions[0], // monthly_income
       sharedQuestions[1], // income_stability
       sharedQuestions[2], // avg_income
-      // Expenses
       sharedQuestions[3], // monthly_expenses
       sharedQuestions[4], // min_expenses
       sharedQuestions[5], // monthly_obligations
@@ -252,9 +283,8 @@ export const flows: Flow[] = [
         max: 999999999,
         suffix: "฿",
       },
-      // Behavior
-      sharedQuestions[sharedQuestions.length - 2], // emergency_readiness
-      sharedQuestions[sharedQuestions.length - 1], // financial_discipline
+      sharedQuestions[11], // emergency_readiness
+      sharedQuestions[12], // financial_discipline
     ],
   },
 ];
