@@ -245,6 +245,35 @@ const translations: Record<Lang, Record<string, string>> = {
     "q.retirement_savings_manual": "Enter your retirement savings",
 
     // New differentiated flow questions
+    // Rank
+    "rank.rankUp": "RANK UP!",
+    "rank.maxRank": "Maximum Rank Achieved! 💎",
+    "rank.xpToNext": "XP to next rank",
+
+    // Sandbox
+    "sandbox.title": "What-If Calculator",
+    "sandbox.disclaimer": "Sandbox mode — these numbers don't affect your real plan",
+    "sandbox.income": "Monthly income",
+    "sandbox.expenses": "Monthly expenses",
+    "sandbox.extraSaving": "Extra monthly savings",
+    "sandbox.currentAge": "Current age",
+    "sandbox.retireAge": "Retirement age",
+    "sandbox.projectedFund": "Projected retirement fund",
+    "sandbox.vsPlan": "vs. your current plan",
+    "sandbox.savingsRate": "Savings rate",
+    "sandbox.retireMonthly": "Monthly in retirement",
+    "sandbox.applyToPlan": "Apply to my real plan →",
+    "sandbox.link": "What-If Calculator",
+
+    // History extra
+    "history.emptyBtn": "Go do your first quest →",
+    "history.rolloverStatus": "Rolled Over",
+    "history.xpEarned": "XP earned",
+
+    // Calendar extra
+    "cal.markDone": "Done ✅",
+    "cal.dca": "DCA — invest consistently, don't time the market",
+
     "q.saving_timeline": "How soon do you want to reach your savings goal?",
     "q.saving_timeline.o1": "3 months ⚡",
     "q.saving_timeline.o2": "6 months 📅",
@@ -545,6 +574,35 @@ const translations: Record<Lang, Record<string, string>> = {
     "q.retirement_savings_manual": "ใส่จำนวนเงินออมเพื่อเกษียณ",
 
     // New differentiated flow questions
+    // Rank
+    "rank.rankUp": "เลเวลขึ้น!",
+    "rank.maxRank": "ถึง Rank สูงสุดแล้ว! 💎",
+    "rank.xpToNext": "XP ที่ต้องการ",
+
+    // Sandbox
+    "sandbox.title": "เครื่องคิดเลขลองเล่น",
+    "sandbox.disclaimer": "โหมดทดลอง — ตัวเลขนี้ไม่กระทบแผนจริงของคุณ",
+    "sandbox.income": "รายได้ต่อเดือน",
+    "sandbox.expenses": "ค่าใช้จ่ายต่อเดือน",
+    "sandbox.extraSaving": "ออมเพิ่มอีก",
+    "sandbox.currentAge": "อายุปัจจุบัน",
+    "sandbox.retireAge": "อายุเกษียณ",
+    "sandbox.projectedFund": "เงินเกษียณที่คาดว่าจะได้",
+    "sandbox.vsPlan": "เทียบกับแผนปัจจุบัน",
+    "sandbox.savingsRate": "อัตราออม",
+    "sandbox.retireMonthly": "ใช้ได้ต่อเดือนหลังเกษียณ",
+    "sandbox.applyToPlan": "นำค่านี้ไปใช้กับแผนจริง →",
+    "sandbox.link": "🧮 ลองคำนวณเล่น",
+
+    // History extra
+    "history.emptyBtn": "ไปทำเควสแรกกันเลย →",
+    "history.rolloverStatus": "ทบเดือนหน้า",
+    "history.xpEarned": "XP ที่ได้รับ",
+
+    // Calendar extra
+    "cal.markDone": "ทำแล้ว ✅",
+    "cal.dca": "DCA — ลงทุนสม่ำเสมอ ไม่ต้องจับจังหวะตลาด",
+
     "q.saving_timeline": "อยากถึงเป้าหมายการออมภายในกี่เดือน?",
     "q.saving_timeline.o1": "3 เดือน ⚡",
     "q.saving_timeline.o2": "6 เดือน 📅",
