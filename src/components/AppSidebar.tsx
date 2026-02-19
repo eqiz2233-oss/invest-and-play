@@ -18,8 +18,8 @@ import { Play, Scroll, Calendar, User } from "lucide-react";
 
 const navItems = [
   { id: "play", icon: Play, route: "/plan", labelKey: "nav.play" },
-  { id: "quests", icon: Scroll, route: "/dashboard", labelKey: "nav.quests" },
-  { id: "calendar", icon: Calendar, route: "/dashboard?tab=calendar", labelKey: "nav.calendar" },
+  { id: "quests", icon: Scroll, route: "/quests", labelKey: "nav.quests" },
+  { id: "calendar", icon: Calendar, route: "/calendar", labelKey: "nav.calendar" },
   { id: "profile", icon: User, route: "/profile", labelKey: "nav.profile" },
 ];
 
