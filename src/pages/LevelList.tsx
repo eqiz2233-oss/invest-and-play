@@ -26,7 +26,7 @@ const LevelList = () => {
       <header className="sticky top-0 z-10 bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate("/dashboard")} className="p-2 rounded-xl hover:bg-muted transition-colors">
+            <button onClick={() => navigate("/plan")} className="p-2 rounded-xl hover:bg-muted transition-colors">
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
             <span className="font-black text-foreground">{t("home.allLevels")}</span>
