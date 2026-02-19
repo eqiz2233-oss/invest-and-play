@@ -93,6 +93,7 @@ interface GameState {
   activePlanId: string | null;
   activePlan: FinancialPlan | null;
   selectPlan: (plan: PlanType) => void;
+  selectOrCreatePlan: (plan: PlanType) => void;
   submitPlanAnswer: (answer: Answer) => void;
   advancePlanQuestion: () => void;
   resetPlan: () => void;
@@ -223,6 +224,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [xp, levels, currentLevel, currentQuestion, financialSnapshot, selectedPlan, planAnswers, planQuestionIndex, questStatuses, monthlyLogs, plans, activePlanId]);
 
+  // Sync planAnswers back to active plan
+  useEffect(() => {
+    if (activePlanId && planAnswers.length > 0) {
+      setPlans(prev => prev.map(p =>
+        p.id === activePlanId ? { ...p, answers: planAnswers } : p
+      ));
+    }
+  }, [planAnswers, activePlanId]);
+
   const awardXP = (event: keyof typeof XP_EVENTS) => {
     setXp((prev) => prev + XP_EVENTS[event]);
   };
@@ -250,6 +260,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setSelectedPlan(plan);
     setPlanAnswers([]);
     setPlanQuestionIndex(0);
+  };
+
+  const selectOrCreatePlan = (type: PlanType) => {
+    const existing = plans.find(p => p.type === type);
+    if (existing) {
+      switchPlan(existing.id);
+    } else {
+      const names: Record<PlanType, string> = { saving: "Saving", goal: "Financial Goal", retirement: "Retirement" };
+      const emojis: Record<PlanType, string> = { saving: "💰", goal: "🎯", retirement: "🏖️" };
+      createPlan(type, names[type], emojis[type]);
+    }
   };
 
   const submitPlanAnswer = (answer: Answer) => {
@@ -438,7 +459,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         financialSnapshot, completeQuestion, completeLevel,
         startLevel, calculateSnapshot, resetAll,
         selectedPlan, planAnswers, planQuestionIndex,
-        selectPlan, submitPlanAnswer, advancePlanQuestion, resetPlan,
+        selectPlan, selectOrCreatePlan, submitPlanAnswer, advancePlanQuestion, resetPlan,
         questStatuses, monthlyLogs, completeQuest, skipQuest, addMonthlyLog,
         awardXP,
         plans, activePlanId, activePlan, createPlan, switchPlan, deletePlan,

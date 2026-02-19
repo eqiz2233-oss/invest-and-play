@@ -338,6 +338,14 @@ const translations: Record<Lang, Record<string, string>> = {
     "q.investment_interest.o3": "₿ Crypto",
     "q.investment_interest.o4": "🏦 Safe savings",
 
+    // Play page
+    "play.tapToStart": "Tap to begin your journey",
+    "play.chooseMode": "What would you like to plan?",
+    "play.chooseSub": "Pick one — you can always come back for more!",
+    "play.changeMode": "Change Mode",
+    "play.pathComplete": "Path Complete! 🎉",
+    "play.pathCompleteSub": "You've answered all questions for this plan.",
+
     // Navigation
     "nav.play": "Start / Play",
     "nav.quests": "Quests",
@@ -673,6 +681,14 @@ const translations: Record<Lang, Record<string, string>> = {
     "q.investment_interest.o2": "🏠 อสังหาริมทรัพย์",
     "q.investment_interest.o3": "₿ คริปโต",
     "q.investment_interest.o4": "🏦 เงินฝากปลอดภัย",
+
+    // Play page
+    "play.tapToStart": "แตะเพื่อเริ่มเส้นทางของคุณ",
+    "play.chooseMode": "วันนี้อยากวางแผนเรื่องอะไร?",
+    "play.chooseSub": "เลือกได้เลย — กลับมาทำอันอื่นทีหลังได้!",
+    "play.changeMode": "เปลี่ยนโหมด",
+    "play.pathComplete": "ผ่านแล้ว! 🎉",
+    "play.pathCompleteSub": "คุณตอบคำถามครบทุกข้อในแผนนี้แล้ว",
 
     // Navigation
     "nav.play": "เริ่มเล่น",

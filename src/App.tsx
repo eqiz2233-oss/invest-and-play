@@ -7,11 +7,11 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AppLayout from "@/components/AppLayout";
 import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import LevelPage from "./pages/LevelPage";
+import PlayPage from "./pages/PlayPage";
+import QuestsPage from "./pages/QuestsPage";
+import CalendarPage from "./pages/CalendarPage";
+import ProfilePage from "./pages/ProfilePage";
 import Snapshot from "./pages/Snapshot";
-import LevelList from "./pages/LevelList";
-import PlanSelection from "./pages/PlanSelection";
 import PlanFlow from "./pages/PlanFlow";
 import Sandbox from "./pages/Sandbox";
 import NotFound from "./pages/NotFound";
@@ -34,11 +34,12 @@ const App = () => (
                 element={
                   <AppLayout>
                     <Routes>
-                      <Route path="/plan" element={<PlanSelection />} />
+                      <Route path="/plan" element={<PlayPage />} />
                       <Route path="/plan/flow" element={<PlanFlow />} />
-                      <Route path="/levels" element={<LevelList />} />
-                      <Route path="/level/:id" element={<LevelPage />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/quests" element={<QuestsPage />} />
+                      <Route path="/calendar" element={<CalendarPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/dashboard" element={<QuestsPage />} />
                       <Route path="/snapshot" element={<Snapshot />} />
                       <Route path="/sandbox" element={<Sandbox />} />
                       <Route path="*" element={<NotFound />} />
