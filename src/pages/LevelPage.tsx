@@ -29,7 +29,7 @@ const LevelPage = () => {
   const [showComplete, setShowComplete] = useState(false);
 
   if (!level) {
-    navigate("/dashboard");
+    navigate("/levels");
     return null;
   }
 
@@ -68,7 +68,7 @@ const LevelPage = () => {
             className="btn-playful bg-primary text-primary-foreground px-8 py-4 w-full text-lg"
             onClick={() => {
               completeLevel(levelId);
-              navigate("/dashboard");
+              navigate("/levels");
             }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -136,7 +136,7 @@ const LevelPage = () => {
       <header className="sticky top-0 z-10 bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center gap-4">
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/levels")}
             className="p-2 rounded-xl hover:bg-muted transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />

@@ -13,7 +13,7 @@ const PlanSelection = () => {
 
   const handleSelect = (planType: PlanType) => {
     selectPlan(planType);
-    navigate("/plan/flow");
+    navigate("/levels");
   };
 
   return (
@@ -21,7 +21,7 @@ const PlanSelection = () => {
       <header className="sticky top-0 z-10 bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center gap-4">
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/")}
             className="p-2 rounded-xl hover:bg-muted transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
