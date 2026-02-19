@@ -73,7 +73,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <div className="bg-background">
       {/* Rank Up Modal */}
       <AnimatePresence>
         {rankUpModal && (
@@ -102,23 +102,9 @@ const Dashboard = () => {
 
       <TinyWin />
 
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground text-sm">💰</span>
-            </div>
-            <span className="font-black text-foreground">FinGame</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <LanguageToggle />
-            <div className="xp-badge"><Star className="w-3.5 h-3.5" />{xp} XP</div>
-            <div className="streak-badge"><Flame className="w-3.5 h-3.5" />{streak}</div>
-          </div>
-        </div>
-        {/* Desktop tabs */}
-        <div className="hidden md:flex container mx-auto px-4 border-t border-border">
+      {/* In-page tabs */}
+      <div className="border-b border-border">
+        <div className="container mx-auto px-4 flex">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -134,10 +120,10 @@ const Dashboard = () => {
             </button>
           ))}
         </div>
-      </header>
+      </div>
 
       {/* Content */}
-      <main className="container mx-auto px-4 py-6 max-w-lg">
+      <div className="container mx-auto px-4 py-6 max-w-lg">
         <AnimatePresence mode="wait">
           {activeTab === "home" && (
             <motion.div key="home" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
@@ -155,28 +141,7 @@ const Dashboard = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
-
-      {/* Mobile bottom tab bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-20 bg-card border-t border-border">
-        <div className="flex justify-around items-center py-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-colors ${
-                activeTab === tab.id ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              <tab.icon className="w-5 h-5" />
-              <span className="text-[10px] font-bold">{tab.label}</span>
-              {activeTab === tab.id && (
-                <motion.div className="w-6 h-0.5 rounded-full bg-primary" layoutId="tabIndicator" />
-              )}
-            </button>
-          ))}
-        </div>
-      </nav>
+      </div>
     </div>
   );
 };

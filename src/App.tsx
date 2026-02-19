@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GameProvider } from "@/context/GameContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import AppLayout from "@/components/AppLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import LevelPage from "./pages/LevelPage";
@@ -24,15 +25,27 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
+              {/* Landing — no sidebar */}
               <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/level/:id" element={<LevelPage />} />
-              <Route path="/levels" element={<LevelList />} />
-              <Route path="/plan" element={<PlanSelection />} />
-              <Route path="/plan/flow" element={<PlanFlow />} />
-              <Route path="/snapshot" element={<Snapshot />} />
-              <Route path="/sandbox" element={<Sandbox />} />
-              <Route path="*" element={<NotFound />} />
+
+              {/* App shell — with sidebar */}
+              <Route
+                path="*"
+                element={
+                  <AppLayout>
+                    <Routes>
+                      <Route path="/plan" element={<PlanSelection />} />
+                      <Route path="/plan/flow" element={<PlanFlow />} />
+                      <Route path="/levels" element={<LevelList />} />
+                      <Route path="/level/:id" element={<LevelPage />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/snapshot" element={<Snapshot />} />
+                      <Route path="/sandbox" element={<Sandbox />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </AppLayout>
+                }
+              />
             </Routes>
           </BrowserRouter>
         </GameProvider>
