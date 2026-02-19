@@ -2,9 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
 import { useGame } from "@/context/GameContext";
-import LanguageToggle from "@/components/LanguageToggle";
 import { planOptions, PlanType } from "@/data/planFlows";
-import { ArrowLeft } from "lucide-react";
 
 const PlanSelection = () => {
   const navigate = useNavigate();
@@ -17,21 +15,8 @@ const PlanSelection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-10 bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-4">
-          <button
-            onClick={() => navigate("/")}
-            className="p-2 rounded-xl hover:bg-muted transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <div className="flex-1" />
-          <LanguageToggle />
-        </div>
-      </header>
-
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-lg flex flex-col items-center justify-center">
+    <div className="flex-1 flex flex-col">
+      <div className="flex-1 container mx-auto px-4 py-8 max-w-lg flex flex-col items-center justify-center">
         <motion.div
           className="text-center mb-10"
           initial={{ opacity: 0, y: 20 }}
@@ -70,7 +55,7 @@ const PlanSelection = () => {
             </motion.button>
           ))}
         </div>
-      </main>
+      </div>
     </div>
   );
 };

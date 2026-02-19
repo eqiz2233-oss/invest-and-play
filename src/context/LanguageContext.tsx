@@ -337,6 +337,13 @@ const translations: Record<Lang, Record<string, string>> = {
     "q.investment_interest.o2": "🏠 Real estate",
     "q.investment_interest.o3": "₿ Crypto",
     "q.investment_interest.o4": "🏦 Safe savings",
+
+    // Navigation
+    "nav.play": "Start / Play",
+    "nav.quests": "Quests",
+    "nav.calendar": "Calendar",
+    "nav.profile": "Profile",
+    "nav.totalXp": "Total XP",
   },
   th: {
     // Landing
@@ -666,6 +673,13 @@ const translations: Record<Lang, Record<string, string>> = {
     "q.investment_interest.o2": "🏠 อสังหาริมทรัพย์",
     "q.investment_interest.o3": "₿ คริปโต",
     "q.investment_interest.o4": "🏦 เงินฝากปลอดภัย",
+
+    // Navigation
+    "nav.play": "เริ่มเล่น",
+    "nav.quests": "เควส",
+    "nav.calendar": "ปฏิทิน",
+    "nav.profile": "โปรไฟล์",
+    "nav.totalXp": "XP รวม",
   },
 };
 

@@ -132,8 +132,9 @@ const LevelPage = () => {
   const currentSliderVal = sliderValue ?? question.defaultValue ?? question.min ?? 0;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-10 bg-card border-b border-border">
+    <div className="flex-1 flex flex-col">
+      {/* In-page progress bar */}
+      <div className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center gap-4">
           <button
             onClick={() => navigate("/levels")}
@@ -151,9 +152,8 @@ const LevelPage = () => {
           <span className="text-sm font-bold text-muted-foreground">
             {currentQuestion + 1}/{level.questions.length}
           </span>
-          <LanguageToggle />
         </div>
-      </header>
+      </div>
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-lg flex flex-col">
         <AnimatePresence mode="wait">
