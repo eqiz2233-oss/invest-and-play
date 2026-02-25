@@ -10,7 +10,7 @@ interface AppLayoutProps {
 const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-game-warm">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <AppTopBar />

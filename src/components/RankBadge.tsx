@@ -16,33 +16,41 @@ const RankBadge = ({ xp, size = "sm" }: RankBadgeProps) => {
 
   if (size === "sm") {
     return (
-      <span
-        className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold text-white"
+      <motion.span
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-extrabold text-white shadow-md"
         style={{ backgroundColor: rank.color }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
         {rank.emoji} {rankName}
-      </span>
+      </motion.span>
     );
   }
 
   return (
     <motion.div
-      className="card-game text-center overflow-hidden"
+      className="card-game text-center overflow-hidden relative"
       style={{ borderColor: rank.color + "40" }}
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
     >
       <div
-        className="absolute inset-0 opacity-5 rounded-2xl"
+        className="absolute inset-0 opacity-[0.04] rounded-2xl"
         style={{ background: `linear-gradient(135deg, ${rank.color}, transparent)` }}
       />
-      <span className="text-5xl block mb-2">{rank.emoji}</span>
+      <motion.span
+        className="text-5xl block mb-3"
+        animate={{ scale: [1, 1.08, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        {rank.emoji}
+      </motion.span>
       <h3 className="font-black text-foreground text-lg">{rankName}</h3>
       <p className="text-sm text-muted-foreground mt-1">
         {lang === "th" ? rank.descriptionTH : rank.description}
       </p>
       <div className="mt-4">
-        <div className="h-2 rounded-full bg-muted overflow-hidden">
+        <div className="h-2.5 rounded-full bg-muted overflow-hidden">
           <motion.div
             className="h-full rounded-full"
             style={{ backgroundColor: rank.color }}
@@ -51,7 +59,7 @@ const RankBadge = ({ xp, size = "sm" }: RankBadgeProps) => {
             transition={{ duration: 0.8 }}
           />
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-xs text-muted-foreground mt-1.5 font-bold">
           {next
             ? `${t("rank.xpToNext")}: ${next.minXP - xp} XP → ${lang === "th" ? next.nameTH : next.name}`
             : t("rank.maxRank")}
