@@ -25,23 +25,26 @@ const VictoryScreen = ({ onGoCalendar, onGoSummary, xpEarned }: {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm overflow-hidden">
       {/* Confetti particles */}
       {phase === "celebrate" && (
         <div className="absolute inset-0 pointer-events-none">
-          {[...Array(40)].map((_, i) => (
+          {[...Array(50)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-3 h-3 rounded-sm"
+              className="absolute rounded-full"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `-5%`,
+                width: `${6 + Math.random() * 8}px`,
+                height: `${6 + Math.random() * 8}px`,
                 backgroundColor: [
                   "hsl(var(--primary))",
                   "hsl(var(--secondary))",
                   "hsl(var(--accent))",
                   "hsl(var(--xp))",
-                ][i % 4],
+                  "hsl(4 68% 58%)",
+                ][i % 5],
               }}
               initial={{ y: 0, rotate: 0, opacity: 1 }}
               animate={{
@@ -50,8 +53,8 @@ const VictoryScreen = ({ onGoCalendar, onGoSummary, xpEarned }: {
                 opacity: [1, 1, 0],
               }}
               transition={{
-                duration: 2.5 + Math.random() * 1.5,
-                delay: Math.random() * 0.8,
+                duration: 2 + Math.random() * 2,
+                delay: Math.random() * 1,
                 ease: "easeIn",
               }}
             />
@@ -78,10 +81,15 @@ const VictoryScreen = ({ onGoCalendar, onGoSummary, xpEarned }: {
             </motion.div>
             <h1 className="text-4xl font-black text-foreground mb-2">Path Complete!</h1>
             <p className="text-muted-foreground text-lg mb-4">เยี่ยมมาก! You did it! 🎉</p>
-            <div className="xp-badge text-lg px-6 py-2">
+            <motion.div
+              className="xp-badge text-lg px-7 py-2.5"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, type: "spring" }}
+            >
               <Sparkles className="w-5 h-5" />
               +{xpEarned} XP
-            </div>
+            </motion.div>
           </motion.div>
         )}
 
@@ -102,10 +110,15 @@ const VictoryScreen = ({ onGoCalendar, onGoSummary, xpEarned }: {
               🏆
             </motion.div>
             <h2 className="text-2xl font-black text-foreground mb-2">Congratulations!</h2>
-            <div className="xp-badge mb-6">
+            <motion.div
+              className="xp-badge mb-6"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+            >
               <Sparkles className="w-4 h-4" />
               +{xpEarned} XP earned
-            </div>
+            </motion.div>
             <div className="space-y-3 w-full">
               <motion.button
                 className="w-full btn-playful bg-primary text-primary-foreground px-8 py-4 text-base flex items-center justify-center gap-2"
@@ -175,7 +188,6 @@ const PlayPage = () => {
 
   const isComplete = activeQuestions.length > 0 && activeQuestions.every(q => answeredIds.has(q.id));
 
-  // Show victory screen once when completing
   useEffect(() => {
     if (isComplete && !victoryShown) {
       calculateSnapshot();
@@ -188,7 +200,6 @@ const PlayPage = () => {
     ? (activeQuestions.filter(q => answeredIds.has(q.id)).length / activeQuestions.length) * 100
     : 0;
 
-  // Start / Play = ALWAYS creates a NEW plan
   const handleModeSelect = (type: PlanType) => {
     const modeNames: Record<PlanType, string> = {
       saving: lang === "th" ? "ออมเงิน" : "Saving",
@@ -206,18 +217,16 @@ const PlayPage = () => {
   };
 
   const getNodeOffset = (idx: number) => {
-    const positions = [0, -40, 0, 40];
+    const positions = [0, -48, 0, 48];
     return positions[idx % 4];
   };
 
   const modeEmoji: Record<string, string> = { saving: "💰", goal: "🎯", retirement: "🏖️" };
 
-  // Active plan info
   const activePlan = plans.find(p => p.id === activePlanId);
 
   return (
     <>
-      {/* Victory overlay */}
       {showVictory && (
         <VictoryScreen
           xpEarned={activeQuestions.length * 10}
@@ -231,42 +240,48 @@ const PlayPage = () => {
 
           {/* Active plan label */}
           {activePlan && (
-            <div className="w-full mb-2 flex items-center justify-between">
-              <span className="text-sm font-bold text-muted-foreground">
+            <motion.div
+              className="w-full mb-3 flex items-center justify-between"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <span className="text-sm font-extrabold text-muted-foreground">
                 {activePlan.emoji} {activePlan.name}
               </span>
               {plans.length > 1 && (
-                <div className="flex gap-1">
+                <div className="flex gap-1.5">
                   {plans.map(p => (
-                    <button
+                    <motion.button
                       key={p.id}
                       onClick={() => switchPlan(p.id)}
-                      className={`text-xs px-2 py-0.5 rounded-full font-bold transition-colors ${
+                      className={`text-sm w-8 h-8 rounded-full font-bold transition-all flex items-center justify-center ${
                         p.id === activePlanId
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-primary text-primary-foreground shadow-md"
                           : "bg-muted text-muted-foreground hover:bg-muted/80"
                       }`}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
                       {p.emoji}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* Progress bar */}
           {selectedPlan && activeQuestions.length > 0 && (
-            <div className="w-full mb-6">
+            <div className="w-full mb-8">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-bold text-muted-foreground">
+                <span className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
                   {modeEmoji[selectedPlan]} {t(`plan.${selectedPlan}.title`)}
                 </span>
-                <span className="text-sm font-bold text-primary">{Math.round(progress)}%</span>
+                <span className="text-sm font-black text-primary">{Math.round(progress)}%</span>
               </div>
-              <div className="progress-track h-3">
+              <div className="progress-track h-3.5 rounded-full">
                 <motion.div
-                  className="progress-fill"
+                  className="progress-fill rounded-full"
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.6 }}
                 />
@@ -276,17 +291,23 @@ const PlayPage = () => {
 
           {/* Path */}
           <div className="relative w-full flex flex-col items-center py-4">
+            {/* Curved path connector */}
             {activeQuestions.length > 0 && (
-              <div className="absolute top-16 bottom-8 left-1/2 w-0.5 bg-border -translate-x-1/2 z-0" />
+              <div className="absolute top-20 bottom-8 left-1/2 w-1 bg-gradient-to-b from-border via-border to-transparent -translate-x-1/2 z-0 rounded-full" />
             )}
 
-            {/* START node — always creates new plan */}
+            {/* START node */}
             <motion.button
-              className={`relative z-10 w-20 h-20 rounded-full flex items-center justify-center text-2xl font-black shadow-lg mb-2 transition-all ${
+              className={`relative z-10 w-22 h-22 rounded-full flex items-center justify-center text-2xl font-black mb-3 transition-all ${
                 selectedPlan
-                  ? "bg-primary/10 border-2 border-primary text-primary"
-                  : "bg-primary text-primary-foreground hover:scale-105"
+                  ? "bg-gradient-to-br from-primary/10 to-primary/20 border-3 border-primary text-primary w-20 h-20"
+                  : "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground w-20 h-20 hover:scale-105"
               }`}
+              style={{
+                boxShadow: selectedPlan
+                  ? "0 4px 16px hsl(152 58% 46% / 0.15)"
+                  : "0 6px 0 0 hsl(152 58% 34%), 0 8px 24px hsl(152 58% 46% / 0.3)",
+              }}
               onClick={() => setShowModeSelect(true)}
               whileTap={{ scale: 0.95 }}
               initial={{ scale: 0.8, opacity: 0 }}
@@ -301,24 +322,25 @@ const PlayPage = () => {
 
             {!selectedPlan ? (
               <motion.p
-                className="text-sm font-bold text-muted-foreground mb-6"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                className="text-sm font-extrabold text-muted-foreground mb-8"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
                 {t("play.tapToStart")}
               </motion.p>
             ) : (
-              <button
+              <motion.button
                 onClick={() => setShowModeSelect(true)}
-                className="text-xs font-bold text-primary mb-6 hover:underline flex items-center gap-1"
+                className="text-xs font-extrabold text-primary mb-8 hover:underline flex items-center gap-1 bg-primary/5 px-4 py-1.5 rounded-full"
+                whileHover={{ scale: 1.05 }}
               >
                 <Plus className="w-3 h-3" />
                 {lang === "th" ? "สร้างแผนใหม่" : "New Plan"}
-              </button>
+              </motion.button>
             )}
 
-            {/* Question nodes */}
+            {/* Question nodes — Duolingo zigzag path */}
             {activeQuestions.map((q, idx) => {
               const state = getNodeState(q, idx);
               const offset = getNodeOffset(idx);
@@ -327,27 +349,35 @@ const PlayPage = () => {
               return (
                 <motion.div
                   key={q.id}
-                  className="relative z-10 mb-6 flex flex-col items-center"
+                  className="relative z-10 mb-5 flex flex-col items-center"
                   style={{ marginLeft: offset }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: state === "locked" ? 0.5 : 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: state === "locked" ? 0.4 : 1, y: 0 }}
+                  transition={{ delay: idx * 0.06, type: "spring", stiffness: 300 }}
                 >
                   <motion.button
-                    className={`w-16 h-16 rounded-full flex items-center justify-center text-lg font-black border-4 shadow-md transition-all ${
+                    className={`w-16 h-16 rounded-full flex items-center justify-center text-lg font-black border-4 transition-all ${
                       state === "done"
-                        ? "bg-primary/10 border-primary text-primary"
+                        ? "bg-accent/10 border-accent text-accent"
                         : state === "active"
-                        ? "bg-primary border-primary text-primary-foreground animate-pulse"
-                        : "bg-muted border-border text-muted-foreground"
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "bg-muted/70 border-border text-muted-foreground"
                     }`}
+                    style={{
+                      boxShadow:
+                        state === "done"
+                          ? "0 4px 0 0 hsl(215 76% 42%), 0 4px 12px hsl(215 76% 56% / 0.2)"
+                          : state === "active"
+                          ? "0 5px 0 0 hsl(152 58% 34%), 0 8px 24px hsl(152 58% 46% / 0.3)"
+                          : "none",
+                    }}
                     onClick={() => handleNodeClick(idx, state)}
                     whileTap={state === "active" ? { scale: 0.9 } : {}}
-                    whileHover={state === "active" ? { scale: 1.1 } : {}}
+                    whileHover={state === "active" ? { scale: 1.12, y: -3 } : {}}
                     disabled={state === "locked"}
                   >
                     {state === "done" ? (
-                      <Check className="w-6 h-6" />
+                      <Check className="w-6 h-6" strokeWidth={3} />
                     ) : state === "locked" ? (
                       <Lock className="w-5 h-5" />
                     ) : (
@@ -355,9 +385,17 @@ const PlayPage = () => {
                     )}
                   </motion.button>
                   {state !== "locked" && (
-                    <span className="text-[10px] font-bold text-muted-foreground mt-1 max-w-[80px] text-center truncate">
+                    <span className="text-[10px] font-extrabold text-muted-foreground mt-1.5 max-w-[90px] text-center truncate">
                       {levelLabel}
                     </span>
+                  )}
+                  {/* Active node pulse ring */}
+                  {state === "active" && (
+                    <motion.div
+                      className="absolute inset-0 w-16 h-16 rounded-full border-2 border-primary/40"
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
                   )}
                 </motion.div>
               );
@@ -366,18 +404,22 @@ const PlayPage = () => {
             {/* Complete (non-victory fallback) */}
             {isComplete && !showVictory && (
               <motion.div
-                className="relative z-10 mt-2 flex flex-col items-center"
+                className="relative z-10 mt-4 flex flex-col items-center"
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring" }}
               >
-                <div className="w-20 h-20 rounded-full bg-accent/20 border-4 border-accent flex items-center justify-center">
+                <motion.div
+                  className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-accent/10 border-4 border-accent flex items-center justify-center"
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
                   <Trophy className="w-8 h-8 text-accent" />
-                </div>
-                <h3 className="font-black text-foreground mt-3">{t("play.pathComplete")}</h3>
-                <div className="flex gap-3 mt-4">
+                </motion.div>
+                <h3 className="font-black text-foreground mt-3 text-lg">{t("play.pathComplete")}</h3>
+                <div className="flex gap-3 mt-5">
                   <motion.button
-                    className="btn-playful bg-primary text-primary-foreground px-6 py-2.5 flex items-center gap-2"
+                    className="btn-playful bg-primary text-primary-foreground px-6 py-3 flex items-center gap-2 text-sm"
                     onClick={() => navigate("/calendar")}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -386,7 +428,7 @@ const PlayPage = () => {
                     {lang === "th" ? "ไปปฏิทิน" : "Go to Calendar"}
                   </motion.button>
                   <motion.button
-                    className="btn-playful bg-card border-2 border-border text-foreground px-6 py-2.5 flex items-center gap-2"
+                    className="btn-playful bg-card border-2 border-border text-foreground px-6 py-3 flex items-center gap-2 text-sm"
                     onClick={() => { calculateSnapshot(); navigate("/snapshot"); }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -400,11 +442,17 @@ const PlayPage = () => {
           </div>
         </div>
 
-        {/* Mode Selection Dialog — NEW PLAN ONLY */}
+        {/* Mode Selection Dialog */}
         <Dialog open={showModeSelect} onOpenChange={setShowModeSelect}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md rounded-3xl">
             <DialogTitle className="text-center">
-              <span className="text-4xl mb-2 block">🗺️</span>
+              <motion.span
+                className="text-5xl mb-3 block"
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                🗺️
+              </motion.span>
               <span className="text-xl font-black text-foreground">
                 {lang === "th" ? "วันนี้อยากวางแผนอะไร?" : "What do you want to plan today?"}
               </span>
@@ -412,9 +460,8 @@ const PlayPage = () => {
             <p className="text-sm text-muted-foreground text-center mb-4">
               {lang === "th" ? "เลือกหนึ่งอย่าง — สร้างแผนใหม่ได้เสมอ!" : "Pick one — you can always create more plans!"}
             </p>
-            {/* Plans hint */}
             {plans.length > 0 && (
-              <p className="text-xs text-center text-primary font-bold mb-2 bg-primary/5 rounded-xl py-2">
+              <p className="text-xs text-center text-primary font-extrabold mb-3 bg-primary/5 rounded-2xl py-2.5 px-4">
                 ℹ️ {lang === "th"
                   ? `คุณมี ${plans.length} แผนอยู่แล้ว — นี่จะสร้างแผนใหม่`
                   : `You have ${plans.length} plan(s) — this creates a brand new one`
@@ -422,17 +469,22 @@ const PlayPage = () => {
               </p>
             )}
             <div className="space-y-3">
-              {planOptions.map((plan) => (
+              {planOptions.map((plan, i) => (
                 <motion.button
                   key={plan.id}
                   className="w-full option-card flex items-center gap-4 text-left"
                   onClick={() => handleModeSelect(plan.id)}
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, x: 4 }}
                   whileTap={{ scale: 0.98 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
                 >
-                  <span className="text-3xl">{plan.emoji}</span>
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-3xl">{plan.emoji}</span>
+                  </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-foreground">{t(`plan.${plan.id}.title`)}</h3>
+                    <h3 className="font-extrabold text-foreground">{t(`plan.${plan.id}.title`)}</h3>
                     <p className="text-sm text-muted-foreground">{t(`plan.${plan.id}.desc`)}</p>
                   </div>
                 </motion.button>
@@ -532,33 +584,59 @@ const QuestionDialog = ({ question, questionIndex, totalQuestions, planAnswers, 
     onSubmit({ questionId: question.id, value, label: String(label) });
   };
 
+  // Progress dots
+  const progressPct = ((questionIndex + 1) / totalQuestions) * 100;
+
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto rounded-3xl">
         <DialogTitle className="sr-only">{qText}</DialogTitle>
 
-        <div className="mb-4">
+        <div className="mb-5">
+          {/* Mini progress bar */}
+          <div className="h-2 rounded-full bg-muted overflow-hidden mb-4">
+            <motion.div
+              className="h-full rounded-full bg-primary"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.4 }}
+            />
+          </div>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-primary uppercase">{levelLabel}</span>
-            <span className="text-xs font-bold text-muted-foreground">
+            <span className="text-[10px] font-extrabold text-primary uppercase tracking-wider">{levelLabel}</span>
+            <span className="text-xs font-extrabold text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
               {questionIndex + 1}/{totalQuestions}
             </span>
           </div>
           <h2 className="text-xl font-black text-foreground leading-tight">{qText}</h2>
-          {qHelp && <p className="text-sm text-muted-foreground mt-1">{qHelp}</p>}
+          {qHelp && (
+            <p className="text-sm text-muted-foreground mt-2 bg-muted/50 rounded-xl px-3 py-2">
+              💡 {qHelp}
+            </p>
+          )}
         </div>
 
         {/* Choice */}
         {question.type === "choice" && question.options && (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {question.options.map((opt, i) => (
               <motion.div
                 key={String(opt.value)}
                 className={`option-card ${selectedOption === opt.value ? "option-card-selected" : ""}`}
                 onClick={() => setSelectedOption(opt.value)}
                 whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
               >
-                <span className="font-bold text-foreground">{getOptionLabel(i)}</span>
+                <div className="flex items-center gap-3">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                    selectedOption === opt.value ? "border-primary bg-primary" : "border-border"
+                  }`}>
+                    {selectedOption === opt.value && <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />}
+                  </div>
+                  <span className="font-bold text-foreground">{getOptionLabel(i)}</span>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -566,11 +644,16 @@ const QuestionDialog = ({ question, questionIndex, totalQuestions, planAnswers, 
 
         {/* Slider + Input */}
         {question.type === "slider-input" && (
-          <div className="card-game">
-            <div className="text-center mb-4">
-              <span className="text-3xl font-black text-primary">
+          <div className="card-game bg-gradient-to-br from-primary/3 to-transparent border-primary/10">
+            <div className="text-center mb-5">
+              <motion.span
+                className="text-4xl font-black text-primary block"
+                key={effectiveValue}
+                initial={{ scale: 1.1 }}
+                animate={{ scale: 1 }}
+              >
                 {formatNum(effectiveValue)}{question.suffix ? ` ${question.suffix}` : ""}
-              </span>
+              </motion.span>
             </div>
             {!useManual && (
               <>
@@ -602,7 +685,7 @@ const QuestionDialog = ({ question, questionIndex, totalQuestions, planAnswers, 
                     setManualValue(formatNum(Math.min(num, resolvedMax)));
                   }}
                   placeholder={t("plan.enterAmount")}
-                  className="flex-1 text-center text-xl font-black text-foreground bg-muted rounded-xl px-4 py-3 border-2 border-border focus:border-primary focus:outline-none"
+                  className="flex-1 text-center text-xl font-black text-foreground bg-muted rounded-2xl px-4 py-3 border-2 border-border focus:border-primary focus:outline-none transition-colors"
                   autoFocus
                 />
                 {question.suffix && <span className="text-lg font-bold text-muted-foreground">{question.suffix}</span>}
@@ -618,7 +701,7 @@ const QuestionDialog = ({ question, questionIndex, totalQuestions, planAnswers, 
                   }
                   setUseManual(!useManual);
                 }}
-                className="w-full text-center text-xs font-bold text-primary hover:underline mb-2"
+                className="w-full text-center text-xs font-extrabold text-primary hover:underline mb-2"
               >
                 {useManual ? t("plan.useSlider") : t("plan.enterManual")}
               </button>
@@ -628,7 +711,7 @@ const QuestionDialog = ({ question, questionIndex, totalQuestions, planAnswers, 
 
         {/* Number Input */}
         {question.type === "number-input" && (
-          <div className="card-game">
+          <div className="card-game bg-gradient-to-br from-primary/3 to-transparent border-primary/10">
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -640,7 +723,7 @@ const QuestionDialog = ({ question, questionIndex, totalQuestions, planAnswers, 
                   setInputValue(formatNum(parseInt(raw, 10)));
                 }}
                 placeholder={t("plan.enterAmount")}
-                className="flex-1 text-center text-2xl font-black text-foreground bg-muted rounded-xl px-4 py-4 border-2 border-border focus:border-primary focus:outline-none"
+                className="flex-1 text-center text-2xl font-black text-foreground bg-muted rounded-2xl px-4 py-4 border-2 border-border focus:border-primary focus:outline-none transition-colors"
                 autoFocus
               />
               {question.suffix && (
@@ -651,7 +734,7 @@ const QuestionDialog = ({ question, questionIndex, totalQuestions, planAnswers, 
         )}
 
         <motion.button
-          className={`w-full btn-playful mt-4 px-8 py-3 font-bold text-base ${
+          className={`w-full btn-playful mt-5 px-8 py-3.5 font-extrabold text-base ${
             canSubmit
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-muted-foreground cursor-not-allowed"
@@ -660,6 +743,7 @@ const QuestionDialog = ({ question, questionIndex, totalQuestions, planAnswers, 
           disabled={!canSubmit}
           whileHover={canSubmit ? { scale: 1.02 } : {}}
           whileTap={canSubmit ? { scale: 0.98 } : {}}
+          style={{ boxShadow: canSubmit ? "var(--shadow-playful)" : "none" }}
         >
           {t("level.continue")}
         </motion.button>

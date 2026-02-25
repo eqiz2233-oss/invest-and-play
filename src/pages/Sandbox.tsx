@@ -43,7 +43,6 @@ const Sandbox = () => {
     const baseAnnual = baseSavings * 12;
     const baseFv = baseAnnual * ((Math.pow(1 + realReturn, yearsToRetire) - 1) / realReturn);
 
-    // How many months faster
     const monthsFaster = baseSavings > 0
       ? Math.round((fv - baseFv) / (newSavings || 1))
       : 0;
@@ -70,19 +69,35 @@ const Sandbox = () => {
   return (
     <div className="bg-background">
       <TinyWin />
-      <div className="container mx-auto px-4 py-6 max-w-lg space-y-6">
+      <div className="container mx-auto px-4 py-6 max-w-lg space-y-5">
         {/* Header */}
-        <div className="text-center">
-          <h2 className="font-black text-foreground text-xl">🧮 {t("sim.title")}</h2>
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <motion.span
+            className="text-4xl block mb-2"
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            🧮
+          </motion.span>
+          <h2 className="font-black text-foreground text-xl">{t("sim.title")}</h2>
           <p className="text-sm text-muted-foreground mt-1">{t("sim.subtitle")}</p>
-        </div>
+        </motion.div>
 
-        <div className="bg-secondary/10 border border-secondary/30 rounded-2xl p-3 text-center text-sm text-secondary-foreground">
+        <div className="bg-secondary/10 border border-secondary/30 rounded-2xl p-3 text-center text-xs text-secondary-foreground font-bold">
           🧮 {t("sim.disclaimer")}
         </div>
 
         {/* Friendly Sliders */}
-        <div className="card-game space-y-5">
+        <motion.div
+          className="card-game space-y-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <SliderRow
             label={t("sim.extraSave")}
             emoji="💰"
@@ -102,52 +117,55 @@ const Sandbox = () => {
             step={5}
             suffix="%"
           />
-        </div>
+        </motion.div>
 
         {/* Comparison Cards */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Current Plan */}
-          <div className="card-game text-center py-4 border-muted-foreground/20">
-            <span className="text-2xl">😐</span>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{t("sim.currentPlan")}</p>
-            <p className="text-sm font-black text-foreground mt-1">{formatMoney(sim.currentSavings)}<span className="text-xs font-normal text-muted-foreground">/{t("sim.perMonth")}</span></p>
-            <p className="text-[10px] text-muted-foreground mt-1">{t("sim.totalFund")}: {formatMoney(sim.currentFund)}</p>
-          </div>
-          {/* Simulated Plan */}
           <motion.div
-            className="card-game text-center py-4 border-primary/30 bg-primary/5"
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200 }}
+            className="card-game text-center py-5 border-muted-foreground/20"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            <span className="text-2xl">😄</span>
-            <p className="text-[10px] font-bold text-primary uppercase mt-1">{t("sim.newPlan")}</p>
-            <p className="text-sm font-black text-primary mt-1">{formatMoney(sim.simSavings)}<span className="text-xs font-normal text-muted-foreground">/{t("sim.perMonth")}</span></p>
-            <p className="text-[10px] text-muted-foreground mt-1">{t("sim.totalFund")}: {formatMoney(sim.simFund)}</p>
+            <span className="text-3xl">😐</span>
+            <p className="text-[10px] font-extrabold text-muted-foreground uppercase mt-1.5 tracking-wider">{t("sim.currentPlan")}</p>
+            <p className="text-sm font-black text-foreground mt-1">{formatMoney(sim.currentSavings)}<span className="text-[10px] font-normal text-muted-foreground">/{t("sim.perMonth")}</span></p>
+            <p className="text-[10px] text-muted-foreground mt-1.5">{t("sim.totalFund")}: {formatMoney(sim.currentFund)}</p>
+          </motion.div>
+          <motion.div
+            className="card-game text-center py-5 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.25, type: "spring", stiffness: 200 }}
+          >
+            <span className="text-3xl">😄</span>
+            <p className="text-[10px] font-extrabold text-primary uppercase mt-1.5 tracking-wider">{t("sim.newPlan")}</p>
+            <p className="text-sm font-black text-primary mt-1">{formatMoney(sim.simSavings)}<span className="text-[10px] font-normal text-muted-foreground">/{t("sim.perMonth")}</span></p>
+            <p className="text-[10px] text-muted-foreground mt-1.5">{t("sim.totalFund")}: {formatMoney(sim.simFund)}</p>
           </motion.div>
         </div>
 
         {/* Soft Feedback */}
         {sim.monthsFaster > 0 && (
           <motion.div
-            className="card-game bg-primary/5 border-primary/20 text-center py-3"
+            className="card-game bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 text-center py-4"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <p className="text-sm font-bold text-primary">
+            <p className="text-sm font-extrabold text-primary">
               🚀 {lang === "th"
                 ? `ถึงเป้าหมายเร็วขึ้นประมาณ ${sim.monthsFaster} เดือน`
                 : `Reach your goal ~${sim.monthsFaster} months faster`
               }
             </p>
-            <p className="text-xs text-muted-foreground mt-1">{t("sim.softNote")}</p>
+            <p className="text-xs text-muted-foreground mt-1.5">{t("sim.softNote")}</p>
           </motion.div>
         )}
 
         {/* Apply or Discard */}
         <div className="space-y-3">
           <motion.button
-            className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-bold text-sm"
+            className="w-full btn-playful bg-primary text-primary-foreground py-3.5 font-extrabold text-sm"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleApply}
@@ -156,7 +174,7 @@ const Sandbox = () => {
             {showApplied ? "✅ " + t("sim.applied") : "✨ " + t("sim.usePlan")}
           </motion.button>
           <button
-            className="w-full py-3 rounded-2xl border border-border text-sm text-muted-foreground hover:bg-muted transition-colors"
+            className="w-full py-3.5 rounded-2xl border-2 border-border text-sm text-muted-foreground hover:bg-muted transition-all font-bold"
             onClick={() => navigate(-1)}
           >
             {t("sim.keepCurrent")}
@@ -171,11 +189,16 @@ const SliderRow = ({ label, emoji, value, onChange, min, max, step, suffix }: {
   label: string; emoji: string; value: number; onChange: (v: number) => void; min: number; max: number; step: number; suffix?: string;
 }) => (
   <div>
-    <div className="flex items-center justify-between text-sm mb-2">
+    <div className="flex items-center justify-between text-sm mb-2.5">
       <span className="text-muted-foreground font-bold">{emoji} {label}</span>
-      <span className="font-black text-foreground">
+      <motion.span
+        className="font-black text-foreground bg-muted px-3 py-1 rounded-full text-xs"
+        key={value}
+        initial={{ scale: 1.1 }}
+        animate={{ scale: 1 }}
+      >
         {suffix === "%" ? `${value}%` : formatMoney(value)}
-      </span>
+      </motion.span>
     </div>
     <input
       type="range"

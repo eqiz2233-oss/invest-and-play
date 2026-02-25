@@ -82,68 +82,79 @@ const QuestsPage = () => {
 
   const borderColor = (type: string) => {
     switch (type) {
-      case "save": return "border-l-[hsl(var(--primary))]";
-      case "invest": return "border-l-[hsl(var(--accent))]";
-      case "track": return "border-l-[hsl(var(--secondary))]";
-      default: return "border-l-[hsl(var(--muted-foreground))]";
+      case "save": return "border-l-primary";
+      case "invest": return "border-l-accent";
+      case "track": return "border-l-secondary";
+      default: return "border-l-muted-foreground";
     }
   };
 
   return (
     <div className="bg-background">
       <TinyWin />
-      <div className="container mx-auto px-4 py-6 max-w-lg space-y-6">
+      <div className="container mx-auto px-4 py-6 max-w-lg space-y-5">
         {/* Plan switcher */}
         {plans.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
             {plans.map(p => (
-              <button
+              <motion.button
                 key={p.id}
                 onClick={() => switchPlan(p.id)}
-                className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
+                className={`shrink-0 px-4 py-2.5 rounded-2xl text-sm font-extrabold transition-all ${
                   p.id === activePlanId
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 {p.emoji} {p.name} {p.id === activePlanId && "✓"}
-              </button>
+              </motion.button>
             ))}
-            <button
+            <motion.button
               onClick={() => navigate("/plan")}
-              className="shrink-0 px-4 py-2 rounded-full text-sm font-bold bg-muted text-muted-foreground hover:bg-muted/80"
+              className="shrink-0 px-4 py-2.5 rounded-2xl text-sm font-bold bg-muted text-muted-foreground hover:bg-muted/80 border-2 border-dashed border-border"
+              whileHover={{ scale: 1.02 }}
             >
               + {lang === "th" ? "เพิ่มแผน" : "Add Plan"}
-            </button>
+            </motion.button>
           </div>
         )}
 
         {isExample && (
-          <div className="bg-secondary/10 border border-secondary/30 rounded-2xl p-3 text-center text-sm text-secondary-foreground">
+          <motion.div
+            className="bg-secondary/10 border border-secondary/30 rounded-2xl p-3 text-center text-sm text-secondary-foreground"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             ✨ {t("home.exampleNote")}
-          </div>
+          </motion.div>
         )}
 
         {/* Monthly Mission */}
-        <div className="card-game bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+        <motion.div
+          className="card-game bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h2 className="font-black text-foreground text-lg">🎯 {t("home.monthlyMission")}</h2>
-              <div className="mt-3 space-y-2">
+              <div className="mt-3 space-y-2.5">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">💰 {t("cal.save")}</span>
-                  <span className="font-bold text-foreground">{formatMoney(monthlySavings)}</span>
+                  <span className="text-muted-foreground font-bold">💰 {t("cal.save")}</span>
+                  <span className="font-black text-foreground">{formatMoney(monthlySavings)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">🛍️ {t("cal.spendMax")}</span>
-                  <span className="font-bold text-foreground">{formatMoney(monthlyExpenses)}</span>
+                  <span className="text-muted-foreground font-bold">🛍️ {t("cal.spendMax")}</span>
+                  <span className="font-black text-foreground">{formatMoney(monthlyExpenses)}</span>
                 </div>
               </div>
-              <div className="mt-3">
-                <div className="progress-track h-2">
-                  <motion.div className="progress-fill h-2" initial={{ width: 0 }} animate={{ width: `${Math.min(monthProgress, 100)}%` }} transition={{ duration: 0.8 }} />
+              <div className="mt-4">
+                <div className="progress-track h-2.5">
+                  <motion.div className="progress-fill h-2.5" initial={{ width: 0 }} animate={{ width: `${Math.min(monthProgress, 100)}%` }} transition={{ duration: 0.8 }} />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">{remaining} {t("home.daysLeft")}</p>
+                <p className="text-xs text-muted-foreground mt-1.5 font-bold">{remaining} {t("home.daysLeft")}</p>
               </div>
             </div>
             <div className="relative w-16 h-16 shrink-0 ml-4">
@@ -163,30 +174,34 @@ const QuestsPage = () => {
               </span>
             </div>
           </div>
-          <button onClick={() => navigate("/snapshot")} className="mt-3 text-xs font-bold text-primary hover:underline">
+          <button onClick={() => navigate("/snapshot")} className="mt-3 text-xs font-extrabold text-primary hover:underline">
             {t("home.viewSnapshot")}
           </button>
-        </div>
+        </motion.div>
 
         {/* Weekly Quests */}
         <div>
           <h3 className="font-black text-foreground mb-3">📋 {t("home.weeklyQuests")}</h3>
           <div className="space-y-3">
-            {weeklyQuests.map(quest => {
+            {weeklyQuests.map((quest, qi) => {
               const status = getQuestStatus(quest.id);
               const isDone = status === "done";
               const isSkipped = status === "skipped";
               return (
                 <motion.div
                   key={quest.id}
-                  className={`relative card-game py-4 border-l-4 ${borderColor(quest.type)} transition-colors ${
+                  className={`relative card-game py-4 border-l-4 ${borderColor(quest.type)} transition-all ${
                     isDone ? "bg-primary/5" : isSkipped ? "bg-muted/50 opacity-60" : ""
                   }`}
                   layout
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: qi * 0.08 }}
+                  whileHover={{ x: isDone ? 0 : 3 }}
                 >
                   {confettiQuest === quest.id && (
                     <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-                      {[...Array(8)].map((_, i) => (
+                      {[...Array(10)].map((_, i) => (
                         <motion.div
                           key={i}
                           className="absolute w-2 h-2 rounded-full"
@@ -206,23 +221,29 @@ const QuestsPage = () => {
                     <span className="text-2xl">{quest.icon}</span>
                     <div className="flex-1">
                       <p className={`font-bold text-foreground text-sm ${isDone ? "line-through opacity-60" : ""}`}>{quest.title}</p>
-                      {quest.amount !== null && <p className="text-xs text-muted-foreground">{formatMoney(quest.amount)}</p>}
+                      {quest.amount !== null && <p className="text-xs text-muted-foreground font-bold">{formatMoney(quest.amount)}</p>}
                     </div>
                     {isDone ? (
-                      <span className="text-primary font-bold text-sm">✅</span>
+                      <motion.span
+                        className="text-primary font-bold text-sm"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring" }}
+                      >✅</motion.span>
                     ) : isSkipped ? (
-                      <span className="text-muted-foreground text-xs">{t("quest.skip")}</span>
+                      <span className="text-muted-foreground text-xs font-bold">{t("quest.skip")}</span>
                     ) : (
                       <div className="flex gap-2">
                         <motion.button
-                          className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold"
+                          className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-extrabold"
+                          style={{ boxShadow: "var(--shadow-playful-sm)" }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleComplete(quest.id)}
                         >
                           {t("quest.markDone")}
                         </motion.button>
                         <button
-                          className="px-2 py-1.5 rounded-xl text-xs text-muted-foreground hover:bg-muted"
+                          className="px-3 py-2 rounded-xl text-xs text-muted-foreground hover:bg-muted font-bold"
                           onClick={() => skipQuest(quest.id, weekKey, quest.amount || 0)}
                         >
                           {t("quest.skip")}
@@ -239,23 +260,23 @@ const QuestsPage = () => {
         {/* Quick links */}
         <div className="grid grid-cols-2 gap-3">
           <motion.div
-            className="card-game cursor-pointer hover:border-primary/30 transition-colors py-4"
+            className="card-game cursor-pointer hover:border-primary/30 transition-all py-5"
             onClick={() => navigate("/plan")}
-            whileHover={{ y: -2 }}
+            whileHover={{ y: -3 }}
           >
             <div className="text-center">
-              <span className="text-xl">🎮</span>
-              <p className="text-xs font-bold text-foreground mt-1">{t("nav.play")}</p>
+              <span className="text-2xl">🎮</span>
+              <p className="text-xs font-extrabold text-foreground mt-1.5">{t("nav.play")}</p>
             </div>
           </motion.div>
           <motion.div
-            className="card-game cursor-pointer hover:border-primary/30 transition-colors py-4"
+            className="card-game cursor-pointer hover:border-accent/30 transition-all py-5"
             onClick={() => navigate("/sandbox")}
-            whileHover={{ y: -2 }}
+            whileHover={{ y: -3 }}
           >
             <div className="text-center">
-              <span className="text-xl">🧮</span>
-              <p className="text-xs font-bold text-foreground mt-1">{t("sandbox.link")}</p>
+              <span className="text-2xl">🧮</span>
+              <p className="text-xs font-extrabold text-foreground mt-1.5">{t("sandbox.link")}</p>
             </div>
           </motion.div>
         </div>
@@ -263,7 +284,7 @@ const QuestsPage = () => {
         {/* Plan CTA */}
         {plans.length === 0 && (
           <motion.button
-            className="w-full btn-playful bg-primary text-primary-foreground py-4 text-lg"
+            className="w-full btn-playful bg-primary text-primary-foreground py-4 text-lg font-extrabold"
             onClick={() => navigate("/plan")}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}

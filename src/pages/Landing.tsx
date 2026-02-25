@@ -9,47 +9,66 @@ const Landing = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-game-hero">
       <header className="container mx-auto px-4 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+        <div className="flex items-center gap-2.5">
+          <motion.div
+            className="w-11 h-11 rounded-2xl bg-primary flex items-center justify-center shadow-lg"
+            whileHover={{ rotate: [0, -8, 8, 0] }}
+            transition={{ duration: 0.5 }}
+          >
             <span className="text-primary-foreground text-xl">💰</span>
-          </div>
+          </motion.div>
           <span className="font-black text-xl text-foreground">FinGame</span>
         </div>
         <div className="flex items-center gap-3">
           <LanguageToggle />
-          <button
+          <motion.button
             onClick={() => navigate("/plan")}
             className="btn-playful bg-primary text-primary-foreground px-6 py-2.5 text-sm"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             {t("landing.startPlaying")}
-          </button>
+          </motion.button>
         </div>
       </header>
 
       <main className="container mx-auto px-4">
-        <section className="py-16 md:py-24 text-center max-w-3xl mx-auto">
+        <section className="py-16 md:py-28 text-center max-w-3xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
           >
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-bold mb-6">
+            <motion.div
+              className="inline-flex items-center gap-2 bg-primary/10 text-primary px-5 py-2.5 rounded-full text-sm font-bold mb-8"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, type: "spring" }}
+            >
               <Sparkles className="w-4 h-4" />
               {t("landing.badge")}
-            </div>
-            <h1 className="text-4xl md:text-6xl font-black text-foreground leading-tight mb-6">
+            </motion.div>
+            <h1 className="text-4xl md:text-6xl font-black text-foreground leading-[1.1] mb-6">
               {t("landing.title1")}{" "}
-              <span className="text-primary">{t("landing.title2")}</span>
+              <span className="text-primary relative">
+                {t("landing.title2")}
+                <motion.span
+                  className="absolute -bottom-1 left-0 w-full h-1.5 bg-primary/30 rounded-full"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                />
+              </span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
               {t("landing.subtitle")}
             </p>
             <motion.button
               onClick={() => navigate("/plan")}
-              className="btn-playful bg-primary text-primary-foreground px-10 py-4 text-lg"
-              whileHover={{ scale: 1.05 }}
+              className="btn-playful bg-primary text-primary-foreground px-12 py-5 text-lg"
+              whileHover={{ scale: 1.06 }}
               whileTap={{ scale: 0.95 }}
             >
               {t("landing.cta")}
@@ -66,55 +85,70 @@ const Landing = () => {
               icon: <Gamepad2 className="w-8 h-8" />,
               title: t("landing.feature1Title"),
               desc: t("landing.feature1Desc"),
-              color: "bg-primary/10 text-primary",
+              gradient: "from-primary/10 to-primary/5",
+              iconBg: "bg-primary/10 text-primary",
             },
             {
               icon: <TrendingUp className="w-8 h-8" />,
               title: t("landing.feature2Title"),
               desc: t("landing.feature2Desc"),
-              color: "bg-secondary/30 text-secondary-foreground",
+              gradient: "from-secondary/10 to-secondary/5",
+              iconBg: "bg-secondary/20 text-secondary-foreground",
             },
             {
               icon: <Shield className="w-8 h-8" />,
               title: t("landing.feature3Title"),
               desc: t("landing.feature3Desc"),
-              color: "bg-accent/10 text-accent",
+              gradient: "from-accent/10 to-accent/5",
+              iconBg: "bg-accent/10 text-accent",
             },
           ].map((f, i) => (
             <motion.div
               key={i}
-              className="card-game text-center"
-              initial={{ opacity: 0, y: 20 }}
+              className={`card-game text-center bg-gradient-to-br ${f.gradient}`}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
+              transition={{ duration: 0.5, delay: 0.3 + i * 0.12 }}
+              whileHover={{ y: -4 }}
             >
-              <div className={`w-16 h-16 rounded-2xl ${f.color} flex items-center justify-center mx-auto mb-4`}>
+              <div className={`w-16 h-16 rounded-2xl ${f.iconBg} flex items-center justify-center mx-auto mb-4`}>
                 {f.icon}
               </div>
-              <h3 className="font-bold text-lg text-foreground mb-2">{f.title}</h3>
-              <p className="text-muted-foreground text-sm">{f.desc}</p>
+              <h3 className="font-extrabold text-lg text-foreground mb-2">{f.title}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
             </motion.div>
           ))}
         </section>
 
         <section className="py-16 max-w-2xl mx-auto text-center">
           <h2 className="text-3xl font-black text-foreground mb-10">{t("landing.howItWorks")}</h2>
-          <div className="space-y-6">
+          <div className="space-y-4">
             {[1, 2, 3, 4, 5].map((step, i) => {
               const emojis = ["🌱", "💸", "🎯", "🏖️", "📈"];
+              const gradients = [
+                "from-primary/5 to-transparent",
+                "from-secondary/5 to-transparent",
+                "from-accent/5 to-transparent",
+                "from-primary/5 to-transparent",
+                "from-secondary/5 to-transparent",
+              ];
               return (
                 <motion.div
                   key={i}
-                  className="flex items-center gap-4 card-game text-left"
-                  initial={{ opacity: 0, x: -20 }}
+                  className={`flex items-center gap-4 card-game text-left bg-gradient-to-r ${gradients[i]}`}
+                  initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4, delay: 0.1 * i }}
+                  whileHover={{ x: 4 }}
                 >
-                  <div className="level-node level-node-active text-lg shrink-0">
+                  <motion.div
+                    className="level-node level-node-active text-lg shrink-0"
+                    whileHover={{ scale: 1.1 }}
+                  >
                     {emojis[i]}
-                  </div>
+                  </motion.div>
                   <div>
-                    <span className="text-xs font-bold text-muted-foreground">LEVEL {step}</span>
+                    <span className="text-[10px] font-extrabold text-primary uppercase tracking-wider">LEVEL {step}</span>
                     <p className="font-bold text-foreground">{t(`landing.step${step}`)}</p>
                   </div>
                 </motion.div>
@@ -124,7 +158,11 @@ const Landing = () => {
         </section>
 
         <section className="py-16 text-center">
-          <div className="card-game max-w-lg mx-auto bg-primary/5 border-primary/20">
+          <motion.div
+            className="card-game max-w-lg mx-auto bg-gradient-to-br from-primary/8 to-primary/3 border-primary/20"
+            whileHover={{ scale: 1.01 }}
+          >
+            <span className="text-4xl block mb-3">🚀</span>
             <h2 className="text-2xl font-black text-foreground mb-3">
               {t("landing.readyCta")}
             </h2>
@@ -133,17 +171,17 @@ const Landing = () => {
             </p>
             <motion.button
               onClick={() => navigate("/plan")}
-              className="btn-playful bg-primary text-primary-foreground px-8 py-3 text-base"
+              className="btn-playful bg-primary text-primary-foreground px-10 py-3.5 text-base"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               {t("landing.letsGo")}
             </motion.button>
-          </div>
+          </motion.div>
         </section>
       </main>
 
-      <footer className="container mx-auto px-4 py-8 text-center text-sm text-muted-foreground border-t border-border">
+      <footer className="container mx-auto px-4 py-8 text-center text-sm text-muted-foreground border-t border-border/50">
         <p>{t("landing.footer")}</p>
       </footer>
     </div>
